@@ -1,0 +1,125 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Modo claro/escuro */
+:root {
+    --background-light: #f4f4f4;
+    --background-dark: #1e1e1e;
+    --text-light: #333;
+    --text-dark: #f4f4f4;
+    --task-bg-light: #ffffff;
+    --task-bg-dark: #2c2c2c;
+    --button-bg: #007bff;
+    --button-hover: #0056b3;
+}
+
+/* Aplica tema baseado no sistema */
+body {
+    background-color: var(--background-light);
+    color: var(--text-light);
+    text-align: center;
+    padding: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--background-dark);
+        color: var(--text-dark);
+    }
+}
+
+/* Contêiner principal */
+.container {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    background: var(--task-bg-light);
+    transition: all 0.3s ease-in-out;
+}
+
+@media (prefers-color-scheme: dark) {
+    .container {
+        background: var(--task-bg-dark);
+    }
+}
+
+/* Entrada de texto */
+.input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Botão de adicionar */
+button {
+    background-color: var(--button-bg);
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+button:hover {
+    background-color: var(--button-hover);
+}
+
+/* Lista de tarefas */
+#taskList {
+    list-style: none;
+    margin-top: 20px;
+}
+
+.task-item {
+    background: var(--task-bg-light);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.task-item:hover {
+    transform: scale(1.02);
+}
+
+@media (prefers-color-scheme: dark) {
+    .task-item {
+        background: var(--task-bg-dark);
+    }
+}
+
+/* Botão de deletar */
+.delete-button {
+    background: #ff4d4d;
+    border: none;
+    color: white;
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.delete-button:hover {
+    background: #cc0000;
+}
