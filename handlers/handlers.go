@@ -27,7 +27,7 @@ func (h *Handler) CreateTask(c *gin.Context) {
 		ProjectID   uint   `json:"project_id" binding:"required"`
 		UserID      uint   `json:"user_id"`
 	}
-	if err := c.ShouldBingJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -38,5 +38,3 @@ func (h *Handler) CreateTask(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, task)
 }
-
-func
