@@ -163,3 +163,10 @@ func (s *Service) CanModifyProject(userID, projectID uint) (bool, error) {
 	}
 	return role == "admin" || role == "editor", nil
 }
+func (s *Service) AdminOnly(userID, projectID uint) (bool, error) {
+	role, err := s.Repo.GetUserRole(userID, projectID)
+	if err != nil {
+		return false, err
+	}
+	return role == "admin", nil
+}
