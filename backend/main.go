@@ -1,16 +1,23 @@
 package main
 
 import (
-	"log"
+	"os"
 	"work-management/db"
 	"work-management/handlers"
 	"work-management/repository"
 	"work-management/services"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+
+	// Initialize logger
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
+
 	dbConn := db.Connect()
 	repo := repository.NewRepository(dbConn)
 	service := services.NewService(repo)
@@ -21,6 +28,7 @@ func main() {
 	// Public routes
 	r.POST("/users", handler.CreateUser)
 	r.POST("/login", handler.Login)
+	r.POST("/refresh", handler.RefreshToken)
 
 	// Protected routes
 	protected := r.Group("/", handlers.AuthMiddleware())
