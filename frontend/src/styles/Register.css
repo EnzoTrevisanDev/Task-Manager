@@ -1,0 +1,117 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #18202f;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #18202f;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-box {
+    width: 448px;
+    height: 533px;
+    padding: 20px;
+    background-color: #202938;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.login-box h1 {
+    text-align: center;
+    color: white;
+    margin-bottom: auto;
+    /* Push the title to the top */
+    font-size: 24px;
+    /* Adjust based on Figma */
+    font-weight: 600;
+    /* Bold */
+}
+.login-box h3 {
+    text-align: center;
+    color: #9ca3af;
+    margin-bottom: 20px;
+    /* More space before form */
+    font-size: 14px;
+    font-weight: 200;
+    /* Normal weight */
+}
+.login-box .title-form {
+    color: #ffffff;
+    margin-bottom: 5px;
+    /* Tighten spacing above inputs */
+    font-size: 14px;
+    font-weight: 400;
+    /* Medium weight */
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    /* Space between inputs */
+    border-radius: 4px;
+    border: 1px solid #020818;
+    box-sizing: border-box;
+    background-color: #020818;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    /* Ensure inputs use Inter */
+}
+
+.login-box input::placeholder {
+    color: #9ca3af;
+    /* Lighter gray for placeholders */
+}
+
+.login-box button {
+    width: 100%;
+    padding: 10px;
+    background-color: #9b87f6;
+    /* Your purple */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    /* Button uses Inter */
+    font-weight: 500;
+    margin-top: 30px;
+    /* Space between form and button */
+}
+
+.login-box button:hover {
+    background-color: #6654b6;
+    /* Darker purple on hover */
+}
+
+.create-account {
+    text-align: center;
+    color: #9ca3af;
+    margin-top: 20px;
+    /* Space between form and link */
+    font-size: 14px;
+}
+
+.create-account a {
+    font-size: 14px;
+    color: #897FB2;
+    text-decoration: none;
+}
+
+.create-account a:hover {
+    color: #897FB2;
+    text-decoration: underline;
+}
+.alert-password {
+    color: white;
+    font-size: 12px;
+    margin-top: -6px;
+}
