@@ -1,0 +1,114 @@
+.dashboard {
+  display: flex;
+  background-color: #18202f;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.dashboard-content {
+  margin-left: 270px; /* Sidebar width (250px) + 20px gap */
+  width: calc(100% - 270px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.dashboard-content.sidebar-collapsed {
+  margin-left: 100px; /* Collapsed sidebar width (80px) + 20px gap */
+  width: calc(100% - 100px);
+}
+
+.main-content {
+  padding: 20px 20px 20px 40px;
+}
+
+.new-project-btn {
+  background-color: #9b87f6;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  width: fit-content;
+}
+
+.new-project-btn:hover {
+  background-color: #6654b6;
+}
+.main-content .new-project-btn {
+  margin-bottom: 20px; /* Add space below the button */
+  float: flex-end;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background-color: #252b3b;
+  padding: 20px;
+  border-radius: 8px;
+  flex: 1;
+  text-align: center;
+  color: #ffffff;
+}
+
+.stat-icon {
+  margin-bottom: 10px;
+}
+
+.tasks-due-icon {
+  color: #ff6200;
+}
+
+.in-progress-icon {
+  color: #f1c40f;
+}
+
+.completed-icon {
+  color: #2ecc71;
+}
+
+.stat-card h4 {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+
+.stat-card p {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.recent-tasks {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.recent-tasks h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.recent-tasks ul {
+  list-style: none;
+  padding: 0;
+}
+
+.recent-tasks li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.task-title {
+  color: #007bff;
+  font-weight: 500;
+}
+
+.task-due {
+  color: #9ca3af;
+}

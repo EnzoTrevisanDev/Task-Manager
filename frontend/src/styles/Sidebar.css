@@ -1,0 +1,138 @@
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #252b3b;
+  color: #ffffff;
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  font-family: 'Inter', sans-serif;
+  transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar-content {
+  flex: 1;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.sidebar-logo h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.sidebar.collapsed .sidebar-logo h2 {
+  font-size: 18px;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.sidebar-menu h4,
+.sidebar-projects h4 {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+
+.sidebar.collapsed h4 {
+  display: none;
+}
+
+.sidebar-menu ul,
+.sidebar-projects ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-menu li,
+.sidebar-projects li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.sidebar.collapsed .sidebar-menu li,
+.sidebar.collapsed .sidebar-projects li {
+  justify-content: center;
+}
+
+.sidebar.collapsed .menu-text {
+  display: none;
+}
+
+.sidebar-menu li.active {
+  background-color: #9b87f6;
+  border-radius: 4px;
+}
+
+.sidebar-menu li:hover,
+.sidebar-projects li:hover {
+  background-color: #3a4256;
+  border-radius: 4px;
+}
+
+.sidebar-menu .menu-text a,
+.sidebar-projects .menu-text a {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sidebar-menu .menu-text a:hover,
+.sidebar-projects .menu-text a:hover {
+  color: #e0e0e0;
+}
+
+.sidebar-projects li {
+  color: #9ca3af;
+}
+
+.sidebar.collapsed .sidebar-projects {
+  display: none;
+}
+
+.sidebar-user {
+  padding: 10px 0;
+  border-top: 1px solid #3a4256;
+  margin-bottom: 20px; /* Add margin to pull user info up slightly */
+}
+
+.sidebar-user .user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  color: #9ca3af;
+}
+
+.user-email {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.sidebar.collapsed .user-email {
+  display: none;
+}
