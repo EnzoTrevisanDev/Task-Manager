@@ -18,9 +18,6 @@ function TopBar({ isSidebarCollapsed }) {
 
   return (
     <div className={`top-bar ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <div className="top-bar-left">
-        <h1>Dashboard</h1>
-      </div>
       <div className="top-bar-right">
         <div className="user-info">
           <div className="notification-wrapper">

@@ -48,23 +48,6 @@ function Sidebar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
             </li>
           </ul>
         </div>
-        <div className="sidebar-projects">
-          <h4>PROJECTS</h4>
-          <ul>
-            <li className="projects-link">
-              <Folder size={20} />
-              <span className="menu-text">
-                <Link to="/projects">Active Projects</Link>
-              </span>
-            </li>
-            <li className="projects-link">
-              <Folder size={20} />
-              <span className="menu-text">
-                <Link to="/archived">Archived</Link>
-              </span>
-            </li>
-          </ul>
-        </div>
       </div>
       <div className="sidebar-user">
         <div className="user-info">

@@ -5,6 +5,11 @@
   font-family: 'Inter', sans-serif;
 }
 
+.top-bar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 .dashboard-content {
   margin-left: 270px; /* Sidebar width (250px) + 20px gap */
   width: calc(100% - 270px);

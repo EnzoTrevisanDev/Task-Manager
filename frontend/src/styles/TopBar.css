@@ -14,11 +14,6 @@
     margin-left: 100px;
   }
   
-  .top-bar-left {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
   
   .top-bar h1 {
     font-size: 24px;

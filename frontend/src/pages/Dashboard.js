@@ -24,6 +24,9 @@ function Dashboard() {
       <Sidebar isSidebarCollapsed={isSidebarCollapsed} setIsSidebarCollapsed={setIsSidebarCollapsed} />
       <div className={`dashboard-content ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         <TopBar isSidebarCollapsed={isSidebarCollapsed} />
+        <div className="top-bar-left">
+          <h1>Dashboard</h1>
+        </div>
         <div className="main-content">
           <button className="new-project-btn">+ New Project</button> {/* Added here */}
           <div className="stats">

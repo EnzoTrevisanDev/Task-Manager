@@ -12,6 +12,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  z-index: 1000; /* Ensure sidebar stays on top */
 }
 
 .sidebar.collapsed {
@@ -35,7 +36,8 @@
 }
 
 .sidebar.collapsed .sidebar-logo h2 {
-  font-size: 18px;
+  font-size: 0; /* Hide text when collapsed, use visibility for accessibility if needed */
+  overflow: hidden;
 }
 
 .sidebar-toggle {
@@ -75,6 +77,7 @@
 .sidebar.collapsed .sidebar-menu li,
 .sidebar.collapsed .sidebar-projects li {
   justify-content: center;
+  padding: 10px 0; /* Adjust padding to center icons vertically */
 }
 
 .sidebar.collapsed .menu-text {
@@ -115,7 +118,7 @@
 .sidebar-user {
   padding: 10px 0;
   border-top: 1px solid #3a4256;
-  margin-bottom: 20px; /* Add margin to pull user info up slightly */
+  margin-bottom: 20px;
 }
 
 .sidebar-user .user-info {
