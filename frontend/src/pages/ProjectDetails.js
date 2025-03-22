@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { AlertCircle, Clock, CheckCircle, User } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle, User, X, GripVertical } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,21 +26,27 @@ function ProjectDetails() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('Tasks');
   const [viewMode, setViewMode] = useState('Kanban');
+  const [columns, setColumns] = useState(['To Do', 'In Progress', 'Completed']);
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Component documentation', due: '3/24/2024', status: 'To Do', assignee: 'Emily Brown', previousStatus: null },
     { id: 2, title: 'Design system implementation', due: '3/19/2024', status: 'In Progress', assignee: 'Sarah Wilson', previousStatus: null },
     { id: 3, title: 'User research interviews', due: '3/14/2024', status: 'Completed', assignee: 'James Miller', previousStatus: 'In Progress' },
   ]);
-  const [undoFeedback, setUndoFeedback] = useState({ show: false, taskId: null }); // State for visual feedback
+  const [undoFeedback, setUndoFeedback] = useState({ show: false, taskId: null });
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', due: '', status: 'To Do', assignee: '' });
+  const [newColumnName, setNewColumnName] = useState('');
+  const [newColumnPosition, setNewColumnPosition] = useState('end'); // Default to adding at the end
 
-  // Mock project data (excluding tasks, handled separately)
+  // Mock project data
   const project = {
     id: 1,
     title: 'Marketing Campaign',
     description: 'Q1 2024 Digital Marketing Initiative',
     category: 'Marketing',
     status: 'In Progress',
-    teamMembers: ['Sarah Wilson', 'James Miller', 'Michael Chen'],
+    teamMembers: ['Sarah Wilson', 'James Miller', 'Michael Chen', 'Emily Brown'],
     progress: '3 of 3 tasks completed',
     metrics: {
       cycleTime: '4.2 days',
@@ -126,25 +132,33 @@ function ProjectDetails() {
     { user: 'Michael Chen', action: 'started Design system implementation', time: '3 days ago' },
   ];
 
-  // Handle drag-and-drop
+  // Handle drag-and-drop for both tasks and columns
   const onDragEnd = (result) => {
-    const { source, destination } = result;
+    const { source, destination, type } = result;
 
     if (!destination) return;
 
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    const newTasks = [...tasks];
-    const [movedTask] = newTasks.splice(source.index, 1);
-    const oldStatus = movedTask.status;
-    movedTask.status = destination.droppableId; // Update status based on the column
-    movedTask.previousStatus = oldStatus; // Store the previous status
-    newTasks.splice(destination.index, 0, movedTask);
-
-    setTasks(newTasks);
+    if (type === 'column') {
+      // Handle column reordering
+      const newColumns = [...columns];
+      const [movedColumn] = newColumns.splice(source.index, 1);
+      newColumns.splice(destination.index, 0, movedColumn);
+      setColumns(newColumns);
+    } else {
+      // Handle task reordering
+      const newTasks = [...tasks];
+      const [movedTask] = newTasks.splice(source.index, 1);
+      const oldStatus = movedTask.status;
+      movedTask.status = destination.droppableId;
+      movedTask.previousStatus = oldStatus;
+      newTasks.splice(destination.index, 0, movedTask);
+      setTasks(newTasks);
+    }
   };
 
-  // Handle marking task as completed in List view
+  // Handle marking task as completed
   const markAsCompleted = (taskId) => {
     const newTasks = tasks.map((task) =>
       task.id === taskId && task.status !== 'Completed'
@@ -154,11 +168,11 @@ function ProjectDetails() {
     setTasks(newTasks);
   };
 
-  // Handle undoing completion with restrictions and confirmation
+  // Handle undoing completion
   const undoCompletion = (taskId) => {
     const taskToUndo = tasks.find((task) => task.id === taskId);
     if (!taskToUndo || taskToUndo.status !== 'Completed' || !taskToUndo.previousStatus) {
-      return; // Undo restriction: only allow if completed and has previous status
+      return;
     }
 
     if (window.confirm('Are you sure you want to undo this completion?')) {
@@ -168,9 +182,58 @@ function ProjectDetails() {
           : task
       );
       setTasks(newTasks);
-      setUndoFeedback({ show: true, taskId }); // Trigger visual feedback
-      setTimeout(() => setUndoFeedback({ show: false, taskId: null }), 2000); // Hide after 2 seconds
+      setUndoFeedback({ show: true, taskId });
+      setTimeout(() => setUndoFeedback({ show: false, taskId: null }), 2000);
     }
+  };
+
+  // Handle adding a new task
+  const handleAddTask = (e) => {
+    e.preventDefault();
+    if (!newTask.title || !newTask.due || !newTask.status || !newTask.assignee) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    const newTaskData = {
+      id: tasks.length + 1,
+      title: newTask.title,
+      due: newTask.due,
+      status: newTask.status,
+      assignee: newTask.assignee,
+      previousStatus: null,
+    };
+
+    setTasks([...tasks, newTaskData]);
+    setNewTask({ title: '', due: '', status: 'To Do', assignee: '' });
+    setShowAddTaskModal(false);
+  };
+
+  // Handle adding a new column
+  const handleAddColumn = (e) => {
+    e.preventDefault();
+    if (!newColumnName) {
+      alert('Please enter a column name.');
+      return;
+    }
+
+    if (columns.includes(newColumnName)) {
+      alert('Column name already exists.');
+      return;
+    }
+
+    const newColumns = [...columns];
+    if (newColumnPosition === 'end') {
+      newColumns.push(newColumnName);
+    } else {
+      const positionIndex = columns.indexOf(newColumnPosition);
+      newColumns.splice(positionIndex + 1, 0, newColumnName);
+    }
+
+    setColumns(newColumns);
+    setNewColumnName('');
+    setNewColumnPosition('end');
+    setShowAddColumnModal(false);
   };
 
   return (
@@ -229,163 +292,101 @@ function ProjectDetails() {
                       >
                         Kanban
                       </button>
-                      <button>+ Add Task</button>
+                      <button onClick={() => setShowAddTaskModal(true)}>+ Add Task</button>
                     </div>
-                    <p>{tasks.length} tasks in 3 columns</p>
+                    <p>{tasks.length} tasks in {columns.length} columns</p>
                   </div>
                   {viewMode === 'Kanban' ? (
                     <DragDropContext onDragEnd={onDragEnd}>
-                      <div className="kanban-board">
-                        <Droppable droppableId="To Do">
-                          {(provided) => (
-                            <div
-                              className="column"
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                            >
-                              <h3>
-                                <span className="status-icon todo">
-                                  <Clock size={16} />
-                                </span>
-                                To Do
-                              </h3>
-                              {tasks
-                                .filter((task) => task.status === 'To Do')
-                                .map((task, index) => (
-                                  <Draggable
-                                    key={task.id}
-                                    draggableId={`task-${task.id}`}
-                                    index={index}
+                      <Droppable droppableId="kanban-board" direction="horizontal" type="column">
+                        {(provided) => (
+                          <div
+                            className="kanban-board"
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                          >
+                            {columns.map((column, index) => (
+                              <Draggable key={column} draggableId={`column-${column}`} index={index}>
+                                {(provided) => (
+                                  <div
+                                    className="column"
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
                                   >
-                                    {(provided) => (
-                                      <div
-                                        className="task-card"
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                      >
-                                        <h4>
-                                          <span className="status-icon todo">
-                                            <Clock size={16} />
-                                          </span>
-                                          {task.title}
-                                        </h4>
-                                        <p>Due {task.due}</p>
-                                        <div className="task-assignee">
-                                          <User size={16} />
-                                          <span>{task.assignee}</span>
-                                        </div>
-                                        <button className="add-card-btn">+ Add Card</button>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-                        <Droppable droppableId="In Progress">
-                          {(provided) => (
-                            <div
-                              className="column"
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                            >
-                              <h3>
-                                <span className="status-icon in-progress">
-                                  <AlertCircle size={16} />
-                                </span>
-                                In Progress
-                              </h3>
-                              {tasks
-                                .filter((task) => task.status === 'In Progress')
-                                .map((task, index) => (
-                                  <Draggable
-                                    key={task.id}
-                                    draggableId={`task-${task.id}`}
-                                    index={index}
-                                  >
-                                    {(provided) => (
-                                      <div
-                                        className="task-card"
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                      >
-                                        <h4>
-                                          <span className="status-icon in-progress">
-                                            <AlertCircle size={16} />
-                                          </span>
-                                          {task.title}
-                                        </h4>
-                                        <p>Due {task.due}</p>
-                                        <div className="task-assignee">
-                                          <User size={16} />
-                                          <span>{task.assignee}</span>
-                                        </div>
-                                        <button className="add-card-btn">+ Add Card</button>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-                        <Droppable droppableId="Completed">
-                          {(provided) => (
-                            <div
-                              className="column"
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                            >
-                              <h3>
-                                <span className="status-icon completed">
-                                  <CheckCircle size={16} />
-                                </span>
-                                Completed
-                              </h3>
-                              {tasks
-                                .filter((task) => task.status === 'Completed')
-                                .map((task, index) => (
-                                  <Draggable
-                                    key={task.id}
-                                    draggableId={`task-${task.id}`}
-                                    index={index}
-                                  >
-                                    {(provided) => (
-                                      <div
-                                        className={`task-card ${undoFeedback.show && undoFeedback.taskId === task.id ? 'undo-success' : ''}`}
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                      >
-                                        <h4>
-                                          <span className="status-icon completed">
-                                            <CheckCircle size={16} />
-                                          </span>
-                                          {task.title}
-                                        </h4>
-                                        <p>Due {task.due}</p>
-                                        <div className="task-assignee">
-                                          <User size={16} />
-                                          <span>{task.assignee}</span>
-                                        </div>
-                                        <button
-                                          className="undo-btn"
-                                          onClick={() => undoCompletion(task.id)}
+                                    <h3>
+                                      <span className="drag-handle" {...provided.dragHandleProps}>
+                                        <GripVertical size={16} />
+                                      </span>
+                                      <span className={`status-icon ${column.toLowerCase().replace(' ', '-')}`}>
+                                        {column === 'To Do' && <Clock size={16} />}
+                                        {column === 'In Progress' && <AlertCircle size={16} />}
+                                        {column === 'Completed' && <CheckCircle size={16} />}
+                                        {column !== 'To Do' && column !== 'In Progress' && column !== 'Completed' && <Clock size={16} />}
+                                      </span>
+                                      {column}
+                                    </h3>
+                                    <Droppable droppableId={column} type="task">
+                                      {(provided) => (
+                                        <div
+                                          className="task-list"
+                                          ref={provided.innerRef}
+                                          {...provided.droppableProps}
                                         >
-                                          Undo
-                                        </button>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-                      </div>
+                                          {tasks
+                                            .filter((task) => task.status === column)
+                                            .map((task, index) => (
+                                              <Draggable
+                                                key={task.id}
+                                                draggableId={`task-${task.id}`}
+                                                index={index}
+                                              >
+                                                {(provided) => (
+                                                  <div
+                                                    className={`task-card ${undoFeedback.show && undoFeedback.taskId === task.id ? 'undo-success' : ''}`}
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    {...provided.dragHandleProps}
+                                                  >
+                                                    <h4>
+                                                      <span className={`status-icon ${column.toLowerCase().replace(' ', '-')}`}>
+                                                        {column === 'To Do' && <Clock size={16} />}
+                                                        {column === 'In Progress' && <AlertCircle size={16} />}
+                                                        {column === 'Completed' && <CheckCircle size={16} />}
+                                                        {column !== 'To Do' && column !== 'In Progress' && column !== 'Completed' && <Clock size={16} />}
+                                                      </span>
+                                                      {task.title}
+                                                    </h4>
+                                                    <p>Due {task.due}</p>
+                                                    <div className="task-assignee">
+                                                      <User size={16} />
+                                                      <span>{task.assignee}</span>
+                                                    </div>
+                                                    {task.status === 'Completed' ? (
+                                                      <button
+                                                        className="undo-btn"
+                                                        onClick={() => undoCompletion(task.id)}
+                                                      >
+                                                        Undo
+                                                      </button>
+                                                    ) : (
+                                                      <button className="add-card-btn">+ Add Card</button>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </Draggable>
+                                            ))}
+                                          {provided.placeholder}
+                                        </div>
+                                      )}
+                                    </Droppable>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
                     </DragDropContext>
                   ) : (
                     <div className="list-view">
@@ -408,6 +409,7 @@ function ProjectDetails() {
                                   {task.status === 'To Do' && <Clock size={16} />}
                                   {task.status === 'In Progress' && <AlertCircle size={16} />}
                                   {task.status === 'Completed' && <CheckCircle size={16} />}
+                                  {task.status !== 'To Do' && task.status !== 'In Progress' && task.status !== 'Completed' && <Clock size={16} />}
                                 </span>
                                 {task.status}
                               </td>
@@ -447,7 +449,9 @@ function ProjectDetails() {
                     </div>
                   )}
                   {viewMode === 'Kanban' && (
-                    <button className="add-column-btn">+ Add Column</button>
+                    <button className="add-column-btn" onClick={() => setShowAddColumnModal(true)}>
+                      + Add Column
+                    </button>
                   )}
                 </div>
               )}
@@ -524,6 +528,114 @@ function ProjectDetails() {
               </div>
             </div>
           </div>
+
+          {/* Add Task Modal */}
+          {showAddTaskModal && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <div className="modal-header">
+                  <h2>Add New Task</h2>
+                  <button className="close-btn" onClick={() => setShowAddTaskModal(false)}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddTask}>
+                  <div className="form-group">
+                    <label>Title</label>
+                    <input
+                      type="text"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Due Date</label>
+                    <input
+                      type="date"
+                      value={newTask.due}
+                      onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Status</label>
+                    <select
+                      value={newTask.status}
+                      onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+                      required
+                    >
+                      {columns.map((column) => (
+                        <option key={column} value={column}>
+                          {column}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Assignee</label>
+                    <select
+                      value={newTask.assignee}
+                      onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                      required
+                    >
+                      <option value="">Select Assignee</option>
+                      {project.teamMembers.map((member) => (
+                        <option key={member} value={member}>
+                          {member}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="submit" className="submit-btn">
+                    Add Task
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Add Column Modal */}
+          {showAddColumnModal && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <div className="modal-header">
+                  <h2>Add New Column</h2>
+                  <button className="close-btn" onClick={() => setShowAddColumnModal(false)}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddColumn}>
+                  <div className="form-group">
+                    <label>Column Name</label>
+                    <input
+                      type="text"
+                      value={newColumnName}
+                      onChange={(e) => setNewColumnName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Position After</label>
+                    <select
+                      value={newColumnPosition}
+                      onChange={(e) => setNewColumnPosition(e.target.value)}
+                    >
+                      <option value="end">End of Board</option>
+                      {columns.map((column) => (
+                        <option key={column} value={column}>
+                          After {column}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="submit" className="submit-btn">
+                    Add Column
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

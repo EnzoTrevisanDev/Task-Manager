@@ -1,0 +1,251 @@
+.settings-content {
+    padding: 20px 20px 20px 40px;
+    background-color: #18202f; /* Updated to match other pages */
+    color: #ffffff; /* White text for contrast on dark background */
+    min-height: calc(100vh - 60px);
+    position: relative;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 8px; /* Slightly smaller gap for a tighter layout */
+    margin-bottom: 20px;
+  }
+  
+  .tabs button {
+    background-color: #2a3142; /* Slightly lighter background for inactive state */
+    color: #b0b8c4; /* Brighter gray text for better contrast */
+    border: none;
+    padding: 5px 10px; /* Even more compact padding for Apple-style */
+    border-radius: 20px; /* Higher border-radius for a pill-like shape */
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; /* Smaller font size for a sleek look */
+    font-weight: 500; /* Medium weight for a modern feel */
+    line-height: 1; /* Consistent height */
+    white-space: nowrap; /* Prevent text wrapping */
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease; /* Smooth transitions */
+  }
+  
+  .tabs button:hover {
+    background-color: #3a4256; /* Subtle hover effect */
+    transform: scale(1.02); /* Slight scale on hover for interactivity */
+  }
+  
+  .tabs button.active {
+    background-color: #9b87f6; /* Purple for active tab */
+    color: #ffffff;
+    transform: scale(1.02); /* Slightly larger when active */
+  }
+  
+  .tab-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .user-profile h2,
+  .notifications h2,
+  .appearance h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 5px;
+    color: #ffffff; /* White text for headings */
+  }
+  
+  .user-profile p,
+  .notifications p,
+  .appearance p {
+    color: #9ca3af; /* Light gray for descriptions */
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+  
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .avatar {
+    width: 64px;
+    height: 64px;
+    background-color: #3a4256; /* Darker background for avatar placeholder */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af; /* Light gray icon */
+  }
+  
+  .change-avatar-btn {
+    background-color: transparent;
+    color: #9b87f6; /* Purple text for button */
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .change-avatar-btn:hover {
+    color: #7c6ad6; /* Slightly darker purple on hover */
+    transform: scale(1.02); /* Slight scale on hover */
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    color: #9ca3af; /* Light gray for labels */
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #3a4256; /* Dark border */
+    border-radius: 4px;
+    background-color: #252b3b; /* Dark input background */
+    color: #ffffff; /* White text in inputs */
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+  
+  .save-btn {
+    background-color: #9b87f6; /* Purple button */
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px; /* More compact padding for Apple-style */
+    border-radius: 20px; /* Pill-like shape */
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; /* Smaller font size */
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .save-btn:hover {
+    background-color: #7c6ad6; /* Slightly darker purple on hover */
+    transform: scale(1.02); /* Slight scale on hover */
+  }
+  
+  /* Notification and Appearance Styles */
+  .notification-option,
+  .appearance-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .notification-option label,
+  .appearance-option label {
+    flex: 1;
+    color: #9ca3af; /* Light gray for labels */
+    font-size: 14px;
+  }
+  
+  .appearance-option .description {
+    color: #9ca3af; /* Light gray for descriptions */
+    font-size: 12px;
+    margin: 5px 0 0;
+  }
+  
+  .theme-buttons {
+    display: flex;
+    gap: 8px; /* Smaller gap for a tighter layout */
+  }
+  
+  .theme-buttons button {
+    background-color: #2a3142; /* Slightly lighter background for inactive state */
+    color: #b0b8c4; /* Brighter gray text */
+    border: none;
+    padding: 5px 10px; /* Compact padding for Apple-style */
+    border-radius: 20px; /* Pill-like shape */
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; /* Smaller font size */
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .theme-buttons button:hover {
+    background-color: #3a4256; /* Subtle hover effect */
+    transform: scale(1.02); /* Slight scale on hover */
+  }
+  
+  .theme-buttons button.active {
+    background-color: #9b87f6; /* Purple for active theme */
+    color: #ffffff;
+    transform: scale(1.02); /* Slightly larger when active */
+  }
+  
+  /* Toggle Switch Styles */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 24px; /* Shorter width to match the first image */
+    height: 16px; /* Keep the height for consistency */
+  }
+  
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #3a4256; /* Darker background for switch */
+    transition: 0.4s;
+    border-radius: 16px; /* Match the height for a perfect pill shape */
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: '';
+    height: 12px; /* Keep the toggle circle size */
+    width: 12px; /* Keep the toggle circle size */
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff; /* White toggle */
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .slider {
+    background-color: #9b87f6; /* Purple when toggled on */
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(4px); /* Adjusted to match the new width (24px - 12px - 4px for padding) */
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .settings-content {
+      padding: 10px;
+    }
+  
+    .tabs {
+      flex-wrap: wrap;
+    }
+  
+    .avatar-section {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }

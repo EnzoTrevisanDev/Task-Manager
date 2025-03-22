@@ -6,8 +6,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import ProjectDetails from './pages/ProjectDetails';
-
-
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import Settings from './pages/Settings';
 
 
 
@@ -21,9 +21,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/project/:id" element={<ProjectDetails />} />
-        <Route path="/analytics" element={<h1>Analytics Page</h1>} />
-        <Route path="/settings" element={<h1>Settings Page</h1>} />
-        <Route path="/archived" element={<h1>Archived Projects Page</h1>} />
+        <Route path="/analytics" element={<AnalyticsDashboard />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </Router>
   );

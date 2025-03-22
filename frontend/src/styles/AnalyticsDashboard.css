@@ -1,0 +1,187 @@
+.analytics-dashboard-content {
+    padding: 20px 20px 20px 40px;
+    background-color: #18202f;
+    color: #ffffff;
+    min-height: calc(100vh - 60px);
+    position: relative;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 20px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .dashboard-header p {
+    color: #9ca3af;
+    font-size: 14px;
+    margin: 5px 0 0;
+  }
+  
+  /* Metrics Cards */
+  .metrics-cards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .metric-card {
+    flex: 1;
+    background-color: #252b3b;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .metric-card h3 {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0 0 5px;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .metric-change {
+    font-size: 12px;
+    margin: 5px 0 0;
+  }
+  
+  .metric-change.positive {
+    color: #2ecc71;
+  }
+  
+  .metric-change.negative {
+    color: #e74c3c;
+  }
+  
+  /* Charts Section */
+  .charts-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .chart-container {
+    background-color: #252b3b;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .chart-container.full-width {
+    grid-column: span 2;
+  }
+  
+  .chart-container h2 {
+    font-size: 16px;
+    color: #ffffff;
+    margin: 0 0 10px;
+  }
+  
+  .pie-chart-wrapper {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  
+  /* Budget Overview */
+  .budget-overview {
+    background-color: #252b3b;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .budget-overview h2 {
+    font-size: 16px;
+    color: #ffffff;
+    margin: 0 0 10px;
+  }
+  
+  .budget-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .budget-utilization {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .budget-utilization p {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #3a4256;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background-color: #9b87f6;
+    transition: width 0.3s ease;
+  }
+  
+  .budget-stats {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .budget-stats div {
+    text-align: center;
+  }
+  
+  .budget-stats p {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+  }
+  
+  .budget-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 5px 0 0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .charts-section {
+      grid-template-columns: 1fr;
+    }
+  
+    .chart-container.full-width {
+      grid-column: span 1;
+    }
+  
+    .metrics-cards {
+      flex-direction: column;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .analytics-dashboard-content {
+      padding: 10px;
+    }
+  
+    .metric-value {
+      font-size: 20px;
+    }
+  
+    .budget-stats {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
