@@ -1,58 +1,58 @@
 import React from 'react';
-import { LayoutDashboard, Folder, BarChart, Settings, Menu, X, UserCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LayoutDashboard, Folder, BarChart, Settings, UserCircle } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import '../styles/Sidebar.css';
 
 function Sidebar({ isSidebarCollapsed, setIsSidebarCollapsed }) {
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
-  };
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   return (
     <div className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-content">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <h2>Optima</h2>
-          </div>
-          <button className="sidebar-toggle" onClick={toggleSidebar}>
-            {isSidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
-          </button>
-        </div>
-        <div className="sidebar-menu">
-          <h4 className="menu-title">MAIN</h4>
-          <ul>
-            <li className="active">
-              <LayoutDashboard size={20} />
-              <span className="menu-text">
-                <Link to="/dashboard">Dashboard</Link>
-              </span>
-            </li>
-            <li>
-              <Folder size={20} />
-              <span className="menu-text">
-                <Link to="/projects">Projects</Link>
-              </span>
-            </li>
-            <li>
-              <BarChart size={20} />
-              <span className="menu-text">
-                <Link to="/analytics">Analytics</Link>
-              </span>
-            </li>
-            <li>
-              <Settings size={20} />
-              <span className="menu-text">
-                <Link to="/settings">Settings</Link>
-              </span>
-            </li>
-          </ul>
-        </div>
+      {/* Sidebar header with toggle button */}
+      <div className="sidebar-header">
+        <h4 className={`menu-title ${isSidebarCollapsed ? 'hidden' : ''}`}>Optima</h4>
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="sidebar-toggle"
+        >
+          {isSidebarCollapsed ? '→' : '←'}
+        </button>
+      </div>
+      <div className="sidebar-menu">
+        <ul>
+          <li className={currentPath === '/dashboard' ? 'active' : ''}>
+            <LayoutDashboard size={20} />
+            <span className={`menu-text ${isSidebarCollapsed ? 'hidden' : ''}`}>
+              <Link to="/dashboard">Dashboard</Link>
+            </span>
+          </li>
+          <li className={currentPath === '/projects' ? 'active' : ''}>
+            <Folder size={20} />
+            <span className={`menu-text ${isSidebarCollapsed ? 'hidden' : ''}`}>
+              <Link to="/projects">Projects</Link>
+            </span>
+          </li>
+          <li className={currentPath === '/analytics' ? 'active' : ''}>
+            <BarChart size={20} />
+            <span className={`menu-text ${isSidebarCollapsed ? 'hidden' : ''}`}>
+              <Link to="/analytics">Analytics</Link>
+            </span>
+          </li>
+          <li className={currentPath === '/settings' ? 'active' : ''}>
+            <Settings size={20} />
+            <span className={`menu-text ${isSidebarCollapsed ? 'hidden' : ''}`}>
+              <Link to="/settings">Settings</Link>
+            </span>
+          </li>
+        </ul>
       </div>
       <div className="sidebar-user">
         <div className="user-info">
           <UserCircle size={24} className="user-avatar" />
-          <span className="menu-text user-email">john.doe@example.com</span>
+          <span className={`menu-text user-email ${isSidebarCollapsed ? 'hidden' : ''}`}>
+            john.doe@example.com
+          </span>
         </div>
       </div>
     </div>

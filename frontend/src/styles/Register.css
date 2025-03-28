@@ -115,3 +115,8 @@
     font-size: 12px;
     margin-top: -6px;
 }
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+  }

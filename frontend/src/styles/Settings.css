@@ -1,3 +1,29 @@
+:root {
+  --background-color: #18202f;
+  --card-background: #252b3b;
+  --text-color: #ffffff;
+  --secondary-text: #9ca3af;
+  --accent-color: #9b87f6;
+}
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+body.light {
+  --background-color: #f4f4f4;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --secondary-text: #666666;
+  --accent-color: #9b87f6;
+}
+body.dark {
+  --background-color: #18202f;
+  --card-background: #252b3b;
+  --text-color: #ffffff;
+  --secondary-text: #9ca3af;
+  --accent-color: #9b87f6;
+}
+
 .settings-content {
     padding: 20px 20px 20px 40px;
     background-color: #18202f; /* Updated to match other pages */

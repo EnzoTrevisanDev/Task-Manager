@@ -1,152 +1,203 @@
+/* Existing styles */
+.dashboard {
+  display: flex;
+}
+
+.dashboard-content {
+  flex-grow: 1;
+  margin-left: 250px;
+  transition: margin-left 0.3s ease;
+}
+
+.dashboard-content.sidebar-collapsed {
+  margin-left: 80px;
+}
+
 .projects-content {
-    padding: 20px 20px 20px 40px;
-    background-color: #18202f;
-    color: #ffffff;
-    min-height: calc(100vh - 60px); /* Adjust based on TopBar height */
-  }
-  
-  .projects-filters {
-    margin-bottom: 20px;
-  }
-  
-  .filter-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .filter-tabs button {
-    background-color: #252b3b;
-    color: #9ca3af;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-  }
-  
-  .filter-tabs button.active {
-    background-color: #9b87f6;
-    color: #ffffff;
-  }
-  
-  .sub-filters {
-    display: flex;
-    gap: 20px;
-  }
-  
-  .category-filters, .status-filters {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .category-filters button, .status-filters button {
-    background-color: #252b3b;
-    color: #9ca3af;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-  }
-  
-  .category-filters button.active, .status-filters button.active {
-    background-color: #9b87f6;
-    color: #ffffff;
-  }
-  
-  .projects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Improved responsiveness */
-    gap: 20px;
-    padding: 0 10px; /* Add padding for smaller screens */
-  }
-  
-  .project-card {
-    background-color: #252b3b;
-    padding: 20px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: transform 0.2s; /* Smooth hover effect */
-  }
-  
-  .project-card:hover {
-    transform: translateY(-5px); /* Slight lift on hover */
-  }
-  
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .card-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .favorite-star {
-    color: #f1c40f; /* Yellow for favorites */
-  }
-  
-  .project-description {
-    font-size: 14px;
-    color: #9ca3af;
-    margin: 0;
-  }
-  
-  .card-stats {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #9ca3af;
-  }
-  
-  .task-count {
-    font-weight: 500;
-  }
-  
-  .project-status {
-    display: flex;
-    align-items: center;
-  }
-  
-  .status-icon {
-    margin-right: 5px;
-  }
-  
-  .status-icon.in-progress {
-    color: #f1c40f; /* Yellow for In Progress */
-  }
-  
-  .status-icon.planned {
-    color: #3498db; /* Blue for Planned */
-  }
-  
-  .status-icon.completed {
-    color: #2ecc71; /* Green for Completed */
-  }
-  
-  .view-details-btn {
-    background-color: #9b87f6;
-    color: #ffffff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    width: fit-content;
-    align-self: flex-end;
-    text-decoration: none; /* Remove underline from Link */
-    display: inline-block; /* Ensure proper rendering as a button */
-  }
-  
-  .view-details-btn:hover {
-    background-color: #6654b6;
-  }
+  padding: 20px 20px 20px 40px;
+  background-color: #18202f;
+  color: #ffffff;
+  min-height: calc(100vh - 60px);
+}
+
+.new-project-btn {
+  background-color: #3182ce;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.new-project-btn:hover {
+  background-color: #2b6cb0;
+}
+
+.error-message {
+  color: #ff4d4f;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Add styles for loading and no-projects messages */
+.loading-message,
+.no-projects-message {
+  color: #a0aec0;
+  font-size: 16px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.projects-filters {
+  margin-bottom: 20px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-tabs button {
+  background-color: #252b3b;
+  color: #ffffff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.filter-tabs button.active {
+  background-color: #3182ce;
+}
+
+.sub-filters {
+  display: flex;
+  gap: 20px;
+}
+
+.category-filters,
+.status-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.category-filters button,
+.status-filters button {
+  background-color: #252b3b;
+  color: #ffffff;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+}
+
+.category-filters button.active,
+.status-filters button.active {
+  background-color: #3182ce;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.project-card {
+  background-color: #252b3b;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: block; /* Ensure the card is not hidden */
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.project-tag {
+  background-color: #3182ce;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.unfavorite-star {
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.favorite-star {
+  color: #f1c40f;
+  cursor: pointer;
+}
+
+.project-description {
+  color: #9ca3af;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.card-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.task-count {
+  display: flex;
+  align-items: center;
+}
+
+.project-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-icon {
+  margin-right: 5px;
+}
+
+.status-icon.in-progress {
+  color: #f1c40f;
+}
+
+.status-icon.planned {
+  color: #3498db;
+}
+
+.status-icon.completed {
+  color: #2ecc71;
+}
+
+.view-details-btn {
+  display: inline-block;
+  color: #3182ce;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.view-details-btn:hover {
+  text-decoration: underline;
+}

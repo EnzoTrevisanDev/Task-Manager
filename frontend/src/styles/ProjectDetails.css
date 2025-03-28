@@ -450,6 +450,65 @@
   background-color: #6654b6;
 }
 
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.delete-btn:hover {
+  color: #c0392b;
+}
+
+.project-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.change-owner-btn {
+  background-color: #9b87f6;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.change-owner-btn:hover {
+  background-color: #6654b6;
+}
+
+.delete-project-btn {
+  background-color: #e74c3c;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+
+.delete-project-btn:hover {
+  background-color: #c0392b;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .main-container {

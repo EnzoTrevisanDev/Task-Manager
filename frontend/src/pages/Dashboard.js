@@ -1,5 +1,6 @@
+// src/Dashboard.js
 import React, { useState } from 'react';
-import { Clock, AlertCircle, CheckCircle } from 'lucide-react'; // Add icons for stats
+import { Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import '../styles/Dashboard.css';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
@@ -21,14 +22,17 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      <Sidebar isSidebarCollapsed={isSidebarCollapsed} setIsSidebarCollapsed={setIsSidebarCollapsed} />
+      <Sidebar
+        className="sidebar"
+        isSidebarCollapsed={isSidebarCollapsed}
+        setIsSidebarCollapsed={setIsSidebarCollapsed}
+      />
       <div className={`dashboard-content ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         <TopBar isSidebarCollapsed={isSidebarCollapsed} />
         <div className="top-bar-left">
           <h1>Dashboard</h1>
         </div>
         <div className="main-content">
-          <button className="new-project-btn">+ New Project</button> {/* Added here */}
           <div className="stats">
             <div className="stat-card">
               <div className="stat-icon">

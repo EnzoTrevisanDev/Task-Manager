@@ -9,11 +9,14 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-left: 20px; /* Prevent overlap with sidebar */
 }
+
 .dashboard-content {
   margin-left: 270px; /* Sidebar width (250px) + 20px gap */
   width: calc(100% - 270px);
   transition: margin-left 0.3s ease, width 0.3s ease;
+  z-index: 1; /* Above the sidebar */
 }
 
 .dashboard-content.sidebar-collapsed {
@@ -39,9 +42,10 @@
 .new-project-btn:hover {
   background-color: #6654b6;
 }
+
 .main-content .new-project-btn {
   margin-bottom: 20px; /* Add space below the button */
-  float: flex-end;
+  float: flex-end; /* Note: This is invalid; consider removing or correcting */
 }
 
 .stats {

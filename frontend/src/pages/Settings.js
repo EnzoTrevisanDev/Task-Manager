@@ -45,6 +45,12 @@ function Settings() {
   // Handle Appearance changes
   const handleThemeChange = (theme) => {
     setAppearance((prev) => ({ ...prev, theme }));
+    document.body.classList.remove('light', 'dark');
+    if (theme === 'Light') {
+      document.body.classList.add('light');
+    } else if (theme === 'Dark') {
+      document.body.classList.add('dark');
+    } // 'System' can use prefers-color-scheme later
   };
 
   const handleAppearanceToggle = (key) => {

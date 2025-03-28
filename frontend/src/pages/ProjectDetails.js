@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { AlertCircle, Clock, CheckCircle, User, X, GripVertical } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { AlertCircle, Clock, CheckCircle, User, X, GripVertical, Trash2 } from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,6 +16,7 @@ import { Bar, Line } from 'react-chartjs-2';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
+import api from '../api/api';
 import '../styles/ProjectDetails.css';
 
 // Register ChartJS components
@@ -23,95 +24,79 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointEleme
 
 function ProjectDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('Tasks');
   const [viewMode, setViewMode] = useState('Kanban');
   const [columns, setColumns] = useState(['To Do', 'In Progress', 'Completed']);
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Component documentation', due: '3/24/2024', status: 'To Do', assignee: 'Emily Brown', previousStatus: null },
-    { id: 2, title: 'Design system implementation', due: '3/19/2024', status: 'In Progress', assignee: 'Sarah Wilson', previousStatus: null },
-    { id: 3, title: 'User research interviews', due: '3/14/2024', status: 'Completed', assignee: 'James Miller', previousStatus: 'In Progress' },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [project, setProject] = useState(null);
   const [undoFeedback, setUndoFeedback] = useState({ show: false, taskId: null });
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showAddColumnModal, setShowAddColumnModal] = useState(false);
+  const [showChangeOwnerModal, setShowChangeOwnerModal] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', due: '', status: 'To Do', assignee: '' });
   const [newColumnName, setNewColumnName] = useState('');
-  const [newColumnPosition, setNewColumnPosition] = useState('end'); // Default to adding at the end
+  const [newColumnPosition, setNewColumnPosition] = useState('end');
+  const [newOwnerID, setNewOwnerID] = useState('');
+  const [error, setError] = useState('');
+  const [analytics, setAnalytics] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock project data
-  const project = {
-    id: 1,
-    title: 'Marketing Campaign',
-    description: 'Q1 2024 Digital Marketing Initiative',
-    category: 'Marketing',
-    status: 'In Progress',
-    teamMembers: ['Sarah Wilson', 'James Miller', 'Michael Chen', 'Emily Brown'],
-    progress: '3 of 3 tasks completed',
-    metrics: {
-      cycleTime: '4.2 days',
-      velocity: '28 points',
-      defects: 3,
-      codeCoverage: '87%',
-    },
-  };
+  // Fetch project and tasks on mount
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch project
+        const projectResponse = await api.get(`/projects/${id}`);
+        const projectData = projectResponse.data;
+        setProject({
+          id: projectData.id,
+          title: projectData.name,
+          description: projectData.description || 'No description provided',
+          category: projectData.category || 'Uncategorized',
+          status: projectData.status || 'Planned',
+          teamMembers: projectData.users.map(user => user.User.name),
+          progress: `${projectData.tasks.filter(task => task.status === 'Completed').length} of ${projectData.tasks.length} tasks completed`,
+          creator: projectData.creator ? projectData.creator.name : 'Unknown',
+        });
 
-  // Chart data
-  const cycleTimeData = {
-    labels: ['Task 1', 'Task 2', 'Task 3', 'Task 4', 'Task 5'],
-    datasets: [
-      {
-        label: 'Cycle Time (Days)',
-        data: [5, 7, 3, 6, 4],
-        backgroundColor: '#9b87f6',
-      },
-    ],
-  };
+        // Fetch tasks
+        const tasksResponse = await api.get(`/projects/${id}/tasks`);
+        const tasksData = tasksResponse.data.map(task => ({
+          id: task.id,
+          title: task.title,
+          due: new Date(task.due_date).toLocaleDateString(),
+          status: task.status,
+          assignee: task.user ? task.user.name : 'Unassigned',
+          previousStatus: null,
+        }));
+        setTasks(tasksData);
 
-  const velocityData = {
-    labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4'],
-    datasets: [
-      {
-        label: 'Velocity (Story Points)',
-        data: [18, 27, 36, 30],
-        backgroundColor: '#2ecc71',
-      },
-    ],
-  };
+        // Fetch analytics
+        const analyticsResponse = await api.get(`/projects/${id}/analytics`);
+        setAnalytics(analyticsResponse.data);
 
-  const burndownData = {
-    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
-    datasets: [
-      {
-        label: 'Burndown',
-        data: [12, 10, 8, 6, 4, 2, 0],
-        fill: false,
-        borderColor: '#9b87f6',
-        tension: 0.1,
-      },
-    ],
-  };
+        // Fetch recent activity
+        const activityResponse = await api.get(`/projects/${id}/activities`);
+        setRecentActivity(activityResponse.data.map(activity => ({
+          user: activity.user.name,
+          action: activity.action,
+          time: new Date(activity.timestamp).toLocaleString(),
+        })));
 
-  const cumulativeFlowData = {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-    datasets: [
-      {
-        label: 'To Do',
-        data: [15, 12, 10, 8, 5],
-        backgroundColor: '#e74c3c',
-      },
-      {
-        label: 'In Progress',
-        data: [0, 3, 5, 7, 8],
-        backgroundColor: '#f1c40f',
-      },
-      {
-        label: 'Completed',
-        data: [0, 0, 0, 0, 2],
-        backgroundColor: '#2ecc71',
-      },
-    ],
-  };
+        setError('');
+      } catch (err) {
+        setError(err.response?.data?.error || 'Failed to fetch project data. Please try again.');
+        console.error('Error fetching project data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProjectData();
+  }, [id]);
 
   const chartOptions = {
     responsive: true,
@@ -124,16 +109,8 @@ function ProjectDetails() {
     },
   };
 
-  // Mock recent activity
-  const recentActivity = [
-    { user: 'Sarah Wilson', action: 'created Marketing Campaign', time: '30 minutes ago' },
-    { user: 'James Miller', action: 'completed User research interviews', time: '2 hours ago' },
-    { user: 'Sarah Wilson', action: 'updated Project deadline', time: '1 day ago' },
-    { user: 'Michael Chen', action: 'started Design system implementation', time: '3 days ago' },
-  ];
-
   // Handle drag-and-drop for both tasks and columns
-  const onDragEnd = (result) => {
+  const onDragEnd = async (result) => {
     const { source, destination, type } = result;
 
     if (!destination) return;
@@ -141,13 +118,11 @@ function ProjectDetails() {
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     if (type === 'column') {
-      // Handle column reordering
       const newColumns = [...columns];
       const [movedColumn] = newColumns.splice(source.index, 1);
       newColumns.splice(destination.index, 0, movedColumn);
       setColumns(newColumns);
     } else {
-      // Handle task reordering
       const newTasks = [...tasks];
       const [movedTask] = newTasks.splice(source.index, 1);
       const oldStatus = movedTask.status;
@@ -155,58 +130,148 @@ function ProjectDetails() {
       movedTask.previousStatus = oldStatus;
       newTasks.splice(destination.index, 0, movedTask);
       setTasks(newTasks);
+
+      // Update task status in the backend
+      try {
+        const taskToUpdate = tasks.find(task => task.id === movedTask.id);
+        await api.put(`/tasks/${movedTask.id}`, {
+          title: taskToUpdate.title,
+          description: taskToUpdate.description || '',
+          project_id: parseInt(id),
+          user_id: project.users?.find(user => user.User.name === taskToUpdate.assignee)?.UserID || 0,
+          status: movedTask.status,
+          due_date: new Date(taskToUpdate.due).toISOString(),
+        });
+      } catch (err) {
+        setError('Failed to update task status. Please try again.');
+        console.error('Error updating task status:', err);
+        // Revert the UI change
+        movedTask.status = oldStatus;
+        movedTask.previousStatus = null;
+        setTasks([...newTasks]);
+      }
     }
   };
 
   // Handle marking task as completed
-  const markAsCompleted = (taskId) => {
-    const newTasks = tasks.map((task) =>
-      task.id === taskId && task.status !== 'Completed'
+  const markAsCompleted = async (taskId) => {
+    const taskToUpdate = tasks.find(task => task.id === taskId);
+    if (!taskToUpdate || taskToUpdate.status === 'Completed') return;
+
+    const newTasks = tasks.map(task =>
+      task.id === taskId
         ? { ...task, status: 'Completed', previousStatus: task.status }
         : task
     );
     setTasks(newTasks);
+
+    try {
+      await api.put(`/tasks/${taskId}`, {
+        title: taskToUpdate.title,
+        description: taskToUpdate.description || '',
+        project_id: parseInt(id),
+        user_id: project.users?.find(user => user.User.name === taskToUpdate.assignee)?.UserID || 0,
+        status: 'Completed',
+        due_date: new Date(taskToUpdate.due).toISOString(),
+      });
+    } catch (err) {
+      setError('Failed to mark task as completed. Please try again.');
+      console.error('Error marking task as completed:', err);
+      // Revert the UI change
+      const revertedTasks = tasks.map(task =>
+        task.id === taskId
+          ? { ...task, status: taskToUpdate.status, previousStatus: null }
+          : task
+      );
+      setTasks(revertedTasks);
+    }
   };
 
   // Handle undoing completion
-  const undoCompletion = (taskId) => {
-    const taskToUndo = tasks.find((task) => task.id === taskId);
-    if (!taskToUndo || taskToUndo.status !== 'Completed' || !taskToUndo.previousStatus) {
-      return;
-    }
+  const undoCompletion = async (taskId) => {
+    const taskToUndo = tasks.find(task => task.id === taskId);
+    if (!taskToUndo || taskToUndo.status !== 'Completed' || !taskToUndo.previousStatus) return;
 
     if (window.confirm('Are you sure you want to undo this completion?')) {
-      const newTasks = tasks.map((task) =>
+      const newTasks = tasks.map(task =>
         task.id === taskId
-          ? { ...task, status: task.previousStatus, previousStatus: null }
+          ? { ...task, status: taskToUndo.previousStatus, previousStatus: null }
           : task
       );
       setTasks(newTasks);
-      setUndoFeedback({ show: true, taskId });
-      setTimeout(() => setUndoFeedback({ show: false, taskId: null }), 2000);
+
+      try {
+        await api.put(`/tasks/${taskId}`, {
+          title: taskToUndo.title,
+          description: taskToUndo.description || '',
+          project_id: parseInt(id),
+          user_id: project.users?.find(user => user.User.name === taskToUndo.assignee)?.UserID || 0,
+          status: taskToUndo.previousStatus,
+          due_date: new Date(taskToUndo.due).toISOString(),
+        });
+        setUndoFeedback({ show: true, taskId });
+        setTimeout(() => setUndoFeedback({ show: false, taskId: null }), 2000);
+      } catch (err) {
+        setError('Failed to undo task completion. Please try again.');
+        console.error('Error undoing task completion:', err);
+        // Revert the UI change
+        const revertedTasks = tasks.map(task =>
+          task.id === taskId
+            ? { ...task, status: 'Completed', previousStatus: taskToUndo.previousStatus }
+            : task
+        );
+        setTasks(revertedTasks);
+      }
     }
   };
 
   // Handle adding a new task
-  const handleAddTask = (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.title || !newTask.due || !newTask.status || !newTask.assignee) {
       alert('Please fill in all fields.');
       return;
     }
 
-    const newTaskData = {
-      id: tasks.length + 1,
-      title: newTask.title,
-      due: newTask.due,
-      status: newTask.status,
-      assignee: newTask.assignee,
-      previousStatus: null,
-    };
+    try {
+      const response = await api.post('/tasks', {
+        title: newTask.title,
+        description: '',
+        project_id: parseInt(id),
+        user_id: project.users?.find(user => user.User.name === newTask.assignee)?.UserID || 0,
+        status: newTask.status,
+        due_date: new Date(newTask.due).toISOString(),
+      });
 
-    setTasks([...tasks, newTaskData]);
-    setNewTask({ title: '', due: '', status: 'To Do', assignee: '' });
-    setShowAddTaskModal(false);
+      const newTaskData = {
+        id: response.data.id,
+        title: newTask.title,
+        due: new Date(newTask.due).toLocaleDateString(),
+        status: newTask.status,
+        assignee: newTask.assignee,
+        previousStatus: null,
+      };
+
+      setTasks([...tasks, newTaskData]);
+      setNewTask({ title: '', due: '', status: 'To Do', assignee: '' });
+      setShowAddTaskModal(false);
+    } catch (err) {
+      setError('Failed to add task. Please try again.');
+      console.error('Error adding task:', err);
+    }
+  };
+
+  // Handle deleting a task
+  const handleDeleteTask = async (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setTasks(tasks.filter(task => task.id !== taskId));
+    } catch (err) {
+      setError('Failed to delete task. Please try again.');
+      console.error('Error deleting task:', err);
+    }
   };
 
   // Handle adding a new column
@@ -236,6 +301,51 @@ function ProjectDetails() {
     setShowAddColumnModal(false);
   };
 
+  // Handle deleting the project
+  const handleDeleteProject = async () => {
+    if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
+
+    try {
+      await api.delete(`/projects/${id}`);
+      navigate('/projects');
+    } catch (err) {
+      setError('Failed to delete project. Please try again.');
+      console.error('Error deleting project:', err);
+    }
+  };
+
+  // Handle changing the project owner
+  const handleChangeOwner = async (e) => {
+    e.preventDefault();
+    if (!newOwnerID) {
+      alert('Please select a new owner.');
+      return;
+    }
+
+    try {
+      await api.put(`/projects/${id}/owner`, { new_owner_id: parseInt(newOwnerID) });
+      const projectResponse = await api.get(`/projects/${id}`);
+      const projectData = projectResponse.data;
+      setProject(prev => ({
+        ...prev,
+        creator: projectData.creator ? projectData.creator.name : 'Unknown',
+      }));
+      setShowChangeOwnerModal(false);
+      setNewOwnerID('');
+    } catch (err) {
+      setError('Failed to change project owner. Please try again.');
+      console.error('Error changing project owner:', err);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="dashboard">Loading...</div>;
+  }
+
+  if (!project) {
+    return <div className="dashboard">Project not found.</div>;
+  }
+
   return (
     <div className="dashboard">
       <Sidebar isSidebarCollapsed={isSidebarCollapsed} setIsSidebarCollapsed={setIsSidebarCollapsed} />
@@ -244,7 +354,7 @@ function ProjectDetails() {
         <div className="project-details-content">
           <div className="project-header">
             <h1>
-              {project.title} <span className="status">in-progress</span>
+              {project.title} <span className="status">{project.status.toLowerCase()}</span>
             </h1>
             <p>{project.description}</p>
           </div>
@@ -274,6 +384,7 @@ function ProjectDetails() {
               Files
             </button>
           </div>
+          {error && <p className="error-message">{error}</p>}
           <div className="main-container">
             <div className="main-content">
               {activeTab === 'Tasks' && (
@@ -361,16 +472,24 @@ function ProjectDetails() {
                                                       <User size={16} />
                                                       <span>{task.assignee}</span>
                                                     </div>
-                                                    {task.status === 'Completed' ? (
+                                                    <div className="task-actions">
+                                                      {task.status === 'Completed' ? (
+                                                        <button
+                                                          className="undo-btn"
+                                                          onClick={() => undoCompletion(task.id)}
+                                                        >
+                                                          Undo
+                                                        </button>
+                                                      ) : (
+                                                        <button className="add-card-btn">+ Add Card</button>
+                                                      )}
                                                       <button
-                                                        className="undo-btn"
-                                                        onClick={() => undoCompletion(task.id)}
+                                                        className="delete-btn"
+                                                        onClick={() => handleDeleteTask(task.id)}
                                                       >
-                                                        Undo
+                                                        <Trash2 size={16} />
                                                       </button>
-                                                    ) : (
-                                                      <button className="add-card-btn">+ Add Card</button>
-                                                    )}
+                                                    </div>
                                                   </div>
                                                 )}
                                               </Draggable>
@@ -421,21 +540,29 @@ function ProjectDetails() {
                                 </div>
                               </td>
                               <td>
-                                {task.status !== 'Completed' ? (
+                                <div className="task-actions">
+                                  {task.status !== 'Completed' ? (
+                                    <button
+                                      className="complete-btn"
+                                      onClick={() => markAsCompleted(task.id)}
+                                    >
+                                      Mark as Completed
+                                    </button>
+                                  ) : (
+                                    <button
+                                      className="undo-btn"
+                                      onClick={() => undoCompletion(task.id)}
+                                    >
+                                      Undo
+                                    </button>
+                                  )}
                                   <button
-                                    className="complete-btn"
-                                    onClick={() => markAsCompleted(task.id)}
+                                    className="delete-btn"
+                                    onClick={() => handleDeleteTask(task.id)}
                                   >
-                                    Mark as Completed
+                                    <Trash2 size={16} />
                                   </button>
-                                ) : (
-                                  <button
-                                    className="undo-btn"
-                                    onClick={() => undoCompletion(task.id)}
-                                  >
-                                    Undo
-                                  </button>
-                                )}
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -455,22 +582,22 @@ function ProjectDetails() {
                   )}
                 </div>
               )}
-              {activeTab === 'Analytics' && (
+              {activeTab === 'Analytics' && analytics && (
                 <div className="analytics-section">
                   <div className="chart-row">
                     <div className="chart-container">
-                      <Bar data={cycleTimeData} options={chartOptions} />
+                      <Bar data={analytics.cycleTime} options={chartOptions} />
                     </div>
                     <div className="chart-container">
-                      <Bar data={velocityData} options={chartOptions} />
+                      <Bar data={analytics.velocity} options={chartOptions} />
                     </div>
                   </div>
                   <div className="chart-row">
                     <div className="chart-container">
-                      <Line data={burndownData} options={chartOptions} />
+                      <Line data={analytics.burndown} options={chartOptions} />
                     </div>
                     <div className="chart-container">
-                      <Bar data={cumulativeFlowData} options={chartOptions} />
+                      <Bar data={analytics.cumulativeFlow} options={chartOptions} />
                     </div>
                   </div>
                 </div>
@@ -504,6 +631,10 @@ function ProjectDetails() {
                 <span>{project.category}</span>
               </div>
               <div className="detail-item">
+                <span>Owner</span>
+                <span>{project.creator}</span>
+              </div>
+              <div className="detail-item">
                 <span>Team Members</span>
                 <div className="team-members">
                   {project.teamMembers.map((member, index) => (
@@ -517,14 +648,24 @@ function ProjectDetails() {
                 <span>Progress</span>
                 <span>{project.progress}</span>
               </div>
-              <div className="detail-item">
-                <span>Key Metrics</span>
-                <div className="metrics">
-                  <p>Cycle Time: {project.metrics.cycleTime}</p>
-                  <p>Velocity: {project.metrics.velocity}</p>
-                  <p>Defects: {project.metrics.defects}</p>
-                  <p>Code Coverage: {project.metrics.codeCoverage}</p>
+              {analytics && (
+                <div className="detail-item">
+                  <span>Key Metrics</span>
+                  <div className="metrics">
+                    <p>Cycle Time: {analytics.metrics.cycleTime}</p>
+                    <p>Velocity: {analytics.metrics.velocity}</p>
+                    <p>Defects: {analytics.metrics.defects}</p>
+                    <p>Code Coverage: {analytics.metrics.codeCoverage}</p>
+                  </div>
                 </div>
+              )}
+              <div className="project-actions">
+                <button className="change-owner-btn" onClick={() => setShowChangeOwnerModal(true)}>
+                  Change Owner
+                </button>
+                <button className="delete-project-btn" onClick={handleDeleteProject}>
+                  Delete Project
+                </button>
               </div>
             </div>
           </div>
@@ -631,6 +772,40 @@ function ProjectDetails() {
                   </div>
                   <button type="submit" className="submit-btn">
                     Add Column
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Change Owner Modal */}
+          {showChangeOwnerModal && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <div className="modal-header">
+                  <h2>Change Project Owner</h2>
+                  <button className="close-btn" onClick={() => setShowChangeOwnerModal(false)}>
+                    <X size={16} />
+                  </button>
+                </div>
+                <form onSubmit={handleChangeOwner}>
+                  <div className="form-group">
+                    <label>New Owner</label>
+                    <select
+                      value={newOwnerID}
+                      onChange={(e) => setNewOwnerID(e.target.value)}
+                      required
+                    >
+                      <option value="">Select New Owner</option>
+                      {project.teamMembers.map((member, index) => (
+                        <option key={index} value={project.users[index].UserID}>
+                          {member}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="submit" className="submit-btn">
+                    Change Owner
                   </button>
                 </form>
               </div>

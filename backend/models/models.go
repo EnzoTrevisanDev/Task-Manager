@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -15,21 +17,37 @@ type User struct {
 
 type Task struct {
 	gorm.Model
-	Title       string
-	Description string
-	UserID      uint    `gorm:"index"`
-	User        User    `gorm:"foreignKey:UserID"`
-	ProjectID   uint    `gorm:"index"`
-	Project     Project `gorm:"foreignKey:ProjectID"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	ProjectID   uint      `json:"project_id"`
+	UserID      uint      `json:"user_id"`
+	Status      string    `json:"status"`   // New field for task status (e.g., "To Do", "In Progress", "Completed")
+	DueDate     time.Time `json:"due_date"` // New field for due date
+	User        User      `json:"user" gorm:"foreignKey:UserID"`
+	Project     Project   `json:"project" gorm:"foreignKey:ProjectID"`
+}
+type Project struct {
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Category    string         `json:"category"`
+	Status      string         `json:"status"`
+	IsFavorite  bool           `json:"is_favorite"`
+	CreatorID   uint           `json:"creator_id"`
+	Creator     User           `gorm:"foreignKey:CreatorID" json:"creator"` // Added Creator relation
+	Tasks       []Task         `json:"tasks"`
+	Users       []UserRole     `json:"users"`
+	CreatedAt   gorm.DeletedAt `json:"created_at"`
+	UpdatedAt   gorm.DeletedAt `json:"updated_at"`
 }
 
-type Project struct {
+type Activity struct {
 	gorm.Model
-	Name      string
-	CreatorID uint       `gorm:"index"`
-	Creator   User       `gorm:"foreignKey:CreatorID"`
-	Tasks     []Task     `gorm:"foreignKey:ProjectID"`
-	UserRoles []UserRole `gorm:"foreignKey:ProjectID"`
+	ProjectID uint      `json:"project_id"`
+	UserID    uint      `json:"user_id"`
+	Action    string    `json:"action"`
+	Timestamp time.Time `json:"timestamp"`
+	User      User      `json:"user" gorm:"foreignKey:UserID"`
 }
 
 type UserRole struct {
