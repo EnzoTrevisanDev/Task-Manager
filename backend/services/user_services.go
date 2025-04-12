@@ -26,3 +26,14 @@ func (s *Service) CreateUser(name, email, password string) (*models.User, error)
 	}).Info("User created successfully")
 	return user, nil
 }
+
+func (s *Service) GetUsers() ([]models.User, error) {
+	users, err := s.Repo.GetUsers()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to get users")
+		return nil, err
+	}
+	return users, nil
+}

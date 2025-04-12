@@ -34,9 +34,9 @@ type Project struct {
 	Status      string         `json:"status"`
 	IsFavorite  bool           `json:"is_favorite"`
 	CreatorID   uint           `json:"creator_id"`
-	Creator     User           `gorm:"foreignKey:CreatorID" json:"creator"` // Added Creator relation
+	Creator     User           `gorm:"foreignKey:CreatorID" json:"creator"`
 	Tasks       []Task         `json:"tasks"`
-	Users       []UserRole     `json:"users"`
+	Users       []UserRole     `gorm:"foreignKey:ProjectID"`
 	CreatedAt   gorm.DeletedAt `json:"created_at"`
 	UpdatedAt   gorm.DeletedAt `json:"updated_at"`
 }

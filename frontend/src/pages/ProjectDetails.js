@@ -16,8 +16,10 @@ import { Bar, Line } from 'react-chartjs-2';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
+import UserSelect from '../components/UserSelect';
 import api from '../api/api';
 import '../styles/ProjectDetails.css';
+import { toast } from 'react-hot-toast';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
@@ -49,45 +51,53 @@ function ProjectDetails() {
     const fetchProjectData = async () => {
       setIsLoading(true);
       try {
-        // Fetch project
         const projectResponse = await api.get(`/projects/${id}`);
         const projectData = projectResponse.data;
-        setProject({
+
+        console.log('Raw project data from backend:', projectData);
+        console.log('Project users:', projectData.Users);
+        console.log('Raw tasks from backend:', projectData.tasks);
+
+        const transformedProject = {
           id: projectData.id,
           title: projectData.name,
           description: projectData.description || 'No description provided',
           category: projectData.category || 'Uncategorized',
           status: projectData.status || 'Planned',
-          teamMembers: projectData.users.map(user => user.User.name),
-          progress: `${projectData.tasks.filter(task => task.status === 'Completed').length} of ${projectData.tasks.length} tasks completed`,
+          teamMembers: projectData.Users ? projectData.Users.map(user => user.User.Name || user.User.name) : [],
+          users: projectData.Users ? projectData.Users.map(user => ({
+            id: user.User.ID || user.User.id,
+            name: user.User.Name || user.User.name
+          })).filter(user => user.id && user.name) : [],
+          progress: `${projectData.tasks ? projectData.tasks.filter(task => task.status === 'Completed').length : 0} of ${projectData.tasks ? projectData.tasks.length : 0} tasks completed`,
           creator: projectData.creator ? projectData.creator.name : 'Unknown',
-        });
+        };
 
-        // Fetch tasks
-        const tasksResponse = await api.get(`/projects/${id}/tasks`);
-        const tasksData = tasksResponse.data.map(task => ({
-          id: task.id,
-          title: task.title,
-          due: new Date(task.due_date).toLocaleDateString(),
-          status: task.status,
-          assignee: task.user ? task.user.name : 'Unassigned',
-          previousStatus: null,
-        }));
-        setTasks(tasksData);
+        console.log('Transformed project data:', transformedProject);
+        console.log('Transformed project users:', transformedProject.users);
 
-        // Fetch analytics
-        const analyticsResponse = await api.get(`/projects/${id}/analytics`);
-        setAnalytics(analyticsResponse.data);
+        const transformedTasks = projectData.tasks ? projectData.tasks.map(task => {
+            const taskId = task.ID || task.id;
+            if (!taskId) {
+                console.warn('Task missing ID:', task);
+                return null;
+            }
+            return {
+                id: taskId,
+                title: task.title,
+                description: task.description || '',
+                due: new Date(task.due_date).toLocaleDateString(),
+                status: task.status || 'To Do',
+                assignee: task.user ? (task.user.Name || task.user.name) : 'Unassigned',
+                project_id: task.project_id || parseInt(id),
+                user_id: task.user_id || task.UserID || 0,
+                previousStatus: null,
+            };
+        }).filter(task => task !== null) : [];
 
-        // Fetch recent activity
-        const activityResponse = await api.get(`/projects/${id}/activities`);
-        setRecentActivity(activityResponse.data.map(activity => ({
-          user: activity.user.name,
-          action: activity.action,
-          time: new Date(activity.timestamp).toLocaleString(),
-        })));
-
-        setError('');
+        console.log('Transformed tasks:', transformedTasks);
+        setTasks(transformedTasks);
+        setProject(transformedProject);
       } catch (err) {
         setError(err.response?.data?.error || 'Failed to fetch project data. Please try again.');
         console.error('Error fetching project data:', err);
@@ -96,6 +106,47 @@ function ProjectDetails() {
       }
     };
     fetchProjectData();
+
+    // Enhancement: Set up polling for real-time updates (optional)
+    const interval = setInterval(fetchProjectData, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [id]);
+
+  // Enhancement: Fetch analytics data for the Analytics tab
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        // Placeholder: Replace with actual API call to fetch analytics
+        const analyticsData = {
+          cycleTime: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{ label: 'Cycle Time', data: [5, 3, 4, 2], backgroundColor: '#4CAF50' }],
+          },
+          velocity: {
+            labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4'],
+            datasets: [{ label: 'Velocity', data: [20, 25, 18, 30], backgroundColor: '#2196F3' }],
+          },
+          burndown: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4'],
+            datasets: [{ label: 'Burndown', data: [40, 30, 15, 0], borderColor: '#FF9800', fill: false }],
+          },
+          cumulativeFlow: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{ label: 'Cumulative Flow', data: [10, 20, 30, 40], backgroundColor: '#9C27B0' }],
+          },
+          metrics: {
+            cycleTime: '3 days',
+            velocity: '25 points/sprint',
+            defects: '5',
+            codeCoverage: '85%',
+          },
+        };
+        setAnalytics(analyticsData);
+      } catch (err) {
+        console.error('Error fetching analytics:', err);
+      }
+    };
+    fetchAnalytics();
   }, [id]);
 
   const chartOptions = {
@@ -111,45 +162,40 @@ function ProjectDetails() {
 
   // Handle drag-and-drop for both tasks and columns
   const onDragEnd = async (result) => {
-    const { source, destination, type } = result;
+    const { source, destination } = result;
 
     if (!destination) return;
 
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    if (type === 'column') {
-      const newColumns = [...columns];
-      const [movedColumn] = newColumns.splice(source.index, 1);
-      newColumns.splice(destination.index, 0, movedColumn);
-      setColumns(newColumns);
-    } else {
-      const newTasks = [...tasks];
-      const [movedTask] = newTasks.splice(source.index, 1);
-      const oldStatus = movedTask.status;
-      movedTask.status = destination.droppableId;
-      movedTask.previousStatus = oldStatus;
-      newTasks.splice(destination.index, 0, movedTask);
-      setTasks(newTasks);
+    const newTasks = Array.from(tasks);
+    const [movedTask] = newTasks.splice(source.index, 1);
+    movedTask.status = destination.droppableId;
+    newTasks.splice(destination.index, 0, movedTask);
 
-      // Update task status in the backend
-      try {
+    setTasks(newTasks);
+
+    try {
         const taskToUpdate = tasks.find(task => task.id === movedTask.id);
+        if (!taskToUpdate) {
+            setError('Task not found');
+            return;
+        }
+
         await api.put(`/tasks/${movedTask.id}`, {
-          title: taskToUpdate.title,
-          description: taskToUpdate.description || '',
-          project_id: parseInt(id),
-          user_id: project.users?.find(user => user.User.name === taskToUpdate.assignee)?.UserID || 0,
-          status: movedTask.status,
-          due_date: new Date(taskToUpdate.due).toISOString(),
+            title: taskToUpdate.title,
+            description: taskToUpdate.description || '',
+            project_id: parseInt(id),
+            user_id: project?.users?.find(user => user.name === taskToUpdate.assignee)?.id || 0,
+            status: destination.droppableId,
+            due_date: new Date(taskToUpdate.due).toISOString()
         });
-      } catch (err) {
+        addActivity(`moved task "${taskToUpdate.title}" to ${destination.droppableId}`);
+    } catch (err) {
         setError('Failed to update task status. Please try again.');
         console.error('Error updating task status:', err);
-        // Revert the UI change
-        movedTask.status = oldStatus;
-        movedTask.previousStatus = null;
-        setTasks([...newTasks]);
-      }
+        // Revert the task position on error
+        setTasks(tasks);
     }
   };
 
@@ -170,14 +216,14 @@ function ProjectDetails() {
         title: taskToUpdate.title,
         description: taskToUpdate.description || '',
         project_id: parseInt(id),
-        user_id: project.users?.find(user => user.User.name === taskToUpdate.assignee)?.UserID || 0,
+        user_id: project?.users?.find(user => user.User.name === taskToUpdate.assignee)?.UserID || 0,
         status: 'Completed',
         due_date: new Date(taskToUpdate.due).toISOString(),
       });
+      addActivity(`marked task "${taskToUpdate.title}" as completed`);
     } catch (err) {
       setError('Failed to mark task as completed. Please try again.');
       console.error('Error marking task as completed:', err);
-      // Revert the UI change
       const revertedTasks = tasks.map(task =>
         task.id === taskId
           ? { ...task, status: taskToUpdate.status, previousStatus: null }
@@ -205,16 +251,16 @@ function ProjectDetails() {
           title: taskToUndo.title,
           description: taskToUndo.description || '',
           project_id: parseInt(id),
-          user_id: project.users?.find(user => user.User.name === taskToUndo.assignee)?.UserID || 0,
+          user_id: project?.users?.find(user => user.User.name === taskToUndo.assignee)?.UserID || 0,
           status: taskToUndo.previousStatus,
           due_date: new Date(taskToUndo.due).toISOString(),
         });
+        addActivity(`undid completion of task "${taskToUndo.title}"`);
         setUndoFeedback({ show: true, taskId });
         setTimeout(() => setUndoFeedback({ show: false, taskId: null }), 2000);
       } catch (err) {
         setError('Failed to undo task completion. Please try again.');
         console.error('Error undoing task completion:', err);
-        // Revert the UI change
         const revertedTasks = tasks.map(task =>
           task.id === taskId
             ? { ...task, status: 'Completed', previousStatus: taskToUndo.previousStatus }
@@ -229,16 +275,26 @@ function ProjectDetails() {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.title || !newTask.due || !newTask.status || !newTask.assignee) {
-      alert('Please fill in all fields.');
+      setError('Please fill in all required fields.');
       return;
     }
 
     try {
+      console.log('Project users:', project.users);
+      console.log('Selected assignee:', newTask.assignee);
+      const selectedUser = project.users.find(user => user.id === parseInt(newTask.assignee));
+      console.log('Selected user:', selectedUser);
+      
+      if (!selectedUser) {
+        setError('Selected user not found');
+        return;
+      }
+
       const response = await api.post('/tasks', {
         title: newTask.title,
         description: '',
         project_id: parseInt(id),
-        user_id: project.users?.find(user => user.User.name === newTask.assignee)?.UserID || 0,
+        user_id: selectedUser.id,
         status: newTask.status,
         due_date: new Date(newTask.due).toISOString(),
       });
@@ -248,29 +304,39 @@ function ProjectDetails() {
         title: newTask.title,
         due: new Date(newTask.due).toLocaleDateString(),
         status: newTask.status,
-        assignee: newTask.assignee,
+        assignee: selectedUser.name,
         previousStatus: null,
       };
 
       setTasks([...tasks, newTaskData]);
+      addActivity(`created task "${newTask.title}"`);
       setNewTask({ title: '', due: '', status: 'To Do', assignee: '' });
       setShowAddTaskModal(false);
+      setError('');
     } catch (err) {
-      setError('Failed to add task. Please try again.');
+      setError(err.response?.data?.error || 'Failed to add task. Please try again.');
       console.error('Error adding task:', err);
     }
   };
 
   // Handle deleting a task
   const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-
     try {
       await api.delete(`/tasks/${taskId}`);
       setTasks(tasks.filter(task => task.id !== taskId));
-    } catch (err) {
-      setError('Failed to delete task. Please try again.');
-      console.error('Error deleting task:', err);
+      toast.success('Task deleted successfully');
+    } catch (error) {
+      if (error.response?.status === 404) {
+        // Task already deleted, update UI state
+        setTasks(tasks.filter(task => task.id !== taskId));
+        toast('Task was already deleted', {
+          icon: 'ℹ️',
+          duration: 2000,
+        });
+      } else {
+        toast.error('Failed to delete task');
+        console.error('Error deleting task:', error);
+      }
     }
   };
 
@@ -303,14 +369,22 @@ function ProjectDetails() {
 
   // Handle deleting the project
   const handleDeleteProject = async () => {
-    if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) return;
-
     try {
+      // First delete all tasks associated with the project
+      await Promise.all(tasks.map(task => api.delete(`/tasks/${task.id}`)));
+      // Then delete the project
       await api.delete(`/projects/${id}`);
       navigate('/projects');
-    } catch (err) {
-      setError('Failed to delete project. Please try again.');
-      console.error('Error deleting project:', err);
+      toast.success('Project deleted successfully');
+    } catch (error) {
+      if (error.response?.status === 404) {
+        toast.error('Project not found');
+      } else if (error.response?.status === 403) {
+        toast.error('You do not have permission to delete this project');
+      } else {
+        toast.error('Failed to delete project');
+        console.error('Error deleting project:', error);
+      }
     }
   };
 
@@ -318,23 +392,75 @@ function ProjectDetails() {
   const handleChangeOwner = async (e) => {
     e.preventDefault();
     if (!newOwnerID) {
-      alert('Please select a new owner.');
+      setError('Please select a new owner.');
       return;
     }
 
     try {
-      await api.put(`/projects/${id}/owner`, { new_owner_id: parseInt(newOwnerID) });
-      const projectResponse = await api.get(`/projects/${id}`);
-      const projectData = projectResponse.data;
-      setProject(prev => ({
-        ...prev,
-        creator: projectData.creator ? projectData.creator.name : 'Unknown',
-      }));
+      console.log('Project users:', project.users);
+      console.log('Selected new owner ID:', newOwnerID);
+      const selectedUser = project.users.find(user => user.id === parseInt(newOwnerID));
+      console.log('Selected user:', selectedUser);
+      
+      if (!selectedUser) {
+        setError('Selected user not found');
+        return;
+      }
+
+      await api.put(`/projects/${id}/owner`, {
+        new_owner_id: selectedUser.id
+      });
+
+      // Update the project state with the new owner
+      setProject({
+        ...project,
+        creator: selectedUser.name
+      });
+
+      addActivity(`changed project owner to ${selectedUser.name}`);
       setShowChangeOwnerModal(false);
       setNewOwnerID('');
+      setError('');
     } catch (err) {
-      setError('Failed to change project owner. Please try again.');
+      setError(err.response?.data?.error || 'Failed to change project owner. Please try again.');
       console.error('Error changing project owner:', err);
+    }
+  };
+
+  // Add this function after the existing state declarations
+  const addActivity = (action) => {
+    const newActivity = {
+      user: 'Current User', // You might want to get this from your auth context
+      action: action,
+      time: new Date().toLocaleString()
+    };
+    setRecentActivity(prev => [newActivity, ...prev].slice(0, 10)); // Keep only last 10 activities
+  };
+
+  const handleEditTask = async (taskId, updatedTask) => {
+    try {
+        const taskToUpdate = tasks.find(task => task.id === taskId);
+        if (!taskToUpdate) {
+            setError('Task not found');
+            return;
+        }
+
+        const response = await api.put(`/tasks/${taskId}`, {
+            title: updatedTask.title || taskToUpdate.title,
+            description: updatedTask.description || taskToUpdate.description || '',
+            project_id: parseInt(id),
+            user_id: project?.users?.find(user => user.name === taskToUpdate.assignee)?.id || 0,
+            status: updatedTask.status || taskToUpdate.status,
+            due_date: new Date(taskToUpdate.due).toISOString()
+        });
+
+        setTasks(tasks.map(task => 
+            task.id === taskId ? { ...task, ...response.data } : task
+        ));
+        addActivity(`updated task "${updatedTask.title || taskToUpdate.title}"`);
+    } catch (err) {
+        setError('Failed to update task. Please try again.');
+        console.error('Error updating task:', err);
     }
   };
 
@@ -408,7 +534,7 @@ function ProjectDetails() {
                     <p>{tasks.length} tasks in {columns.length} columns</p>
                   </div>
                   {viewMode === 'Kanban' ? (
-                    <DragDropContext onDragEnd={onDragEnd}>
+                    <DragDropContext onDragEnd={onDragEnd} isCombineEnabled={false}>
                       <Droppable droppableId="kanban-board" direction="horizontal" type="column">
                         {(provided) => (
                           <div
@@ -436,7 +562,7 @@ function ProjectDetails() {
                                       </span>
                                       {column}
                                     </h3>
-                                    <Droppable droppableId={column} type="task">
+                                    <Droppable droppableId={column} type="task" isDropDisabled={false}>
                                       {(provided) => (
                                         <div
                                           className="task-list"
@@ -484,8 +610,19 @@ function ProjectDetails() {
                                                         <button className="add-card-btn">+ Add Card</button>
                                                       )}
                                                       <button
+                                                        className="edit-btn"
+                                                        onClick={() => {
+                                                          handleEditTask(task.id, { title: 'New Title', status: 'In Progress' });
+                                                        }}
+                                                      >
+                                                        Edit
+                                                      </button>
+                                                      <button
                                                         className="delete-btn"
-                                                        onClick={() => handleDeleteTask(task.id)}
+                                                        onClick={() => {
+                                                          console.log('Attempting to delete task with ID:', task.id);
+                                                          handleDeleteTask(task.id);
+                                                        }}
                                                       >
                                                         <Trash2 size={16} />
                                                       </button>
@@ -557,8 +694,19 @@ function ProjectDetails() {
                                     </button>
                                   )}
                                   <button
+                                    className="edit-btn"
+                                    onClick={() => {
+                                      handleEditTask(task.id, { title: 'New Title', status: 'In Progress' });
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
                                     className="delete-btn"
-                                    onClick={() => handleDeleteTask(task.id)}
+                                    onClick={() => {
+                                      console.log('Attempting to delete task with ID:', task.id);
+                                      handleDeleteTask(task.id);
+                                    }}
                                   >
                                     <Trash2 size={16} />
                                   </button>
@@ -582,40 +730,48 @@ function ProjectDetails() {
                   )}
                 </div>
               )}
-              {activeTab === 'Analytics' && analytics && (
+              {activeTab === 'Analytics' && analytics ? (
                 <div className="analytics-section">
                   <div className="chart-row">
                     <div className="chart-container">
-                      <Bar data={analytics.cycleTime} options={chartOptions} />
+                      <Bar data={analytics.cycleTime} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: 'Cycle Time' } } }} />
                     </div>
                     <div className="chart-container">
-                      <Bar data={analytics.velocity} options={chartOptions} />
+                      <Bar data={analytics.velocity} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: 'Velocity' } } }} />
                     </div>
                   </div>
                   <div className="chart-row">
                     <div className="chart-container">
-                      <Line data={analytics.burndown} options={chartOptions} />
+                      <Line data={analytics.burndown} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: 'Burndown Chart' } } }} />
                     </div>
                     <div className="chart-container">
-                      <Bar data={analytics.cumulativeFlow} options={chartOptions} />
+                      <Bar data={analytics.cumulativeFlow} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: 'Cumulative Flow' } } }} />
                     </div>
                   </div>
+                </div>
+              ) : activeTab === 'Analytics' && (
+                <div className="analytics-section">
+                  <p>No analytics data available.</p>
                 </div>
               )}
               {activeTab === 'Activity' && (
                 <div className="activity-section">
                   <h2>Recent Activity</h2>
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="activity-item">
-                      <div className="activity-avatar">
-                        <User size={24} />
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div key={index} className="activity-item">
+                        <div className="activity-avatar">
+                          <User size={24} />
+                        </div>
+                        <div className="activity-details">
+                          <p>{activity.user} {activity.action}</p>
+                          <span>{activity.time}</span>
+                        </div>
                       </div>
-                      <div className="activity-details">
-                        <p>{activity.user} {activity.action}</p>
-                        <span>{activity.time}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p>No recent activity.</p>
+                  )}
                 </div>
               )}
               {activeTab === 'Files' && (
@@ -681,6 +837,7 @@ function ProjectDetails() {
                   </button>
                 </div>
                 <form onSubmit={handleAddTask}>
+                  {error && <div className="error-message">{error}</div>}
                   <div className="form-group">
                     <label>Title</label>
                     <input
@@ -714,19 +871,19 @@ function ProjectDetails() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Assignee</label>
-                    <select
-                      value={newTask.assignee}
-                      onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-                      required
-                    >
-                      <option value="">Select Assignee</option>
-                      {project.teamMembers.map((member) => (
-                        <option key={member} value={member}>
-                          {member}
-                        </option>
-                      ))}
-                    </select>
+                      <label>Assignee</label>
+                      <select
+                          value={newTask.assignee}
+                          onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
+                          required
+                      >
+                          <option value="">Select Assignee</option>
+                          {project.teamMembers.map((member) => (
+                              <option key={member} value={member}>
+                                  {member}
+                              </option>
+                          ))}
+                      </select>
                   </div>
                   <button type="submit" className="submit-btn">
                     Add Task
@@ -789,20 +946,19 @@ function ProjectDetails() {
                   </button>
                 </div>
                 <form onSubmit={handleChangeOwner}>
+                  {error && <div className="error-message">{error}</div>}
                   <div className="form-group">
                     <label>New Owner</label>
-                    <select
+                    <UserSelect
+                      users={project.users}
                       value={newOwnerID}
-                      onChange={(e) => setNewOwnerID(e.target.value)}
+                      onChange={(e) => {
+                        console.log('Selected new owner:', e.target.value);
+                        setNewOwnerID(e.target.value);
+                      }}
+                      placeholder="Select new owner"
                       required
-                    >
-                      <option value="">Select New Owner</option>
-                      {project.teamMembers.map((member, index) => (
-                        <option key={index} value={project.users[index].UserID}>
-                          {member}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
                   <button type="submit" className="submit-btn">
                     Change Owner

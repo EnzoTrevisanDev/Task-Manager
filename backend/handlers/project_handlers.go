@@ -91,6 +91,10 @@ func (h *Handler) GetProject(c *gin.Context) {
 		SendError(c, http.StatusNotFound, "project not found")
 		return
 	}
+	logrus.WithFields(logrus.Fields{
+		"projectID": projectID,
+		"creator":   project.Creator,
+	}).Debug("Project details")
 	c.JSON(http.StatusOK, project)
 }
 

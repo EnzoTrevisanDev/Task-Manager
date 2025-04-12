@@ -47,7 +47,7 @@ func (r *Repository) UpdateTask(task *models.Task) error {
 }
 
 func (r *Repository) DeleteTask(taskID uint) error {
-	return r.DB.Delete(&models.Task{}, taskID).Error
+	return r.DB.Unscoped().Delete(&models.Task{}, taskID).Error
 }
 
 func (r *Repository) AssignTaskToUser(taskID, userID uint) error {
@@ -55,69 +55,128 @@ func (r *Repository) AssignTaskToUser(taskID, userID uint) error {
 }
 
 func (r *Repository) CreateProject(project *models.Project) error {
-	return r.DB.Create(project).Error
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": tx.Error,
+		}).Error("Failed to start transaction")
+		return tx.Error
+	}
+
+	// Create the project
+	if err := tx.Create(project).Error; err != nil {
+		tx.Rollback()
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to create project")
+		return err
+	}
+
+	// Add the creator as an admin in the user_roles table
+	userRole := models.UserRole{
+		UserID:    project.CreatorID,
+		ProjectID: project.ID,
+		Role:      "admin",
+	}
+	if err := tx.Create(&userRole).Error; err != nil {
+		tx.Rollback()
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to create user role for creator")
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to commit transaction")
+		return err
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"projectID": project.ID,
+		"creatorID": project.CreatorID,
+	}).Info("Project created successfully")
+	return nil
 }
 
 func (r *Repository) GetProjects(userID uint) ([]models.Project, error) {
 	var projects []models.Project
-	query := r.DB.
-		Debug().
-		Unscoped(). // Ignore soft deletes
-		Joins("LEFT JOIN user_roles ON user_roles.project_id = projects.id").
-		Where("user_roles.user_id = ? OR projects.creator_id = ?", userID, userID).
-		Group("projects.id")
-
-	err := query.Find(&projects).Error
+	query := `
+        SELECT DISTINCT p.*
+        FROM projects p
+        LEFT JOIN user_roles ur ON ur.project_id = p.id
+        WHERE (ur.user_id = ? OR p.creator_id = ?)
+        AND p.deleted_at IS NULL
+    `
+	err := r.DB.Raw(query, userID, userID).Scan(&projects).Error
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"userID": userID,
 			"error":  err,
-		}).Error("Failed to execute GetProjects query")
+		}).Error("Failed to fetch projects with raw SQL")
 		return nil, err
 	}
 
-	for i := range projects {
-		err := r.DB.
-			Unscoped(). // Ignore soft deletes for preloading
-			Preload("Creator").
-			Preload("Tasks").
-			Preload("Users.User").
-			First(&projects[i], projects[i].ID).Error
-		if err != nil {
-			logrus.WithFields(logrus.Fields{
-				"projectID": projects[i].ID,
-				"error":     err,
-			}).Warn("Failed to preload data for project")
+	if len(projects) > 0 {
+		// Preload associations without refetching the projects
+		for i := range projects {
+			if err := r.DB.Model(&projects[i]).Association("Creator").Find(&projects[i].Creator); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"userID":    userID,
+					"projectID": projects[i].ID,
+					"error":     err,
+				}).Error("Failed to preload Creator for project")
+				return nil, err
+			}
+			if err := r.DB.Model(&projects[i]).Association("Users").Find(&projects[i].Users); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"userID":    userID,
+					"projectID": projects[i].ID,
+					"error":     err,
+				}).Error("Failed to preload Users for project")
+				return nil, err
+			}
 		}
 	}
 
 	logrus.WithFields(logrus.Fields{
-		"userID":   userID,
-		"projects": projects,
-	}).Debug("Projects fetched from database")
+		"userID":       userID,
+		"projectCount": len(projects),
+		"projects":     projects,
+	}).Debug("Projects fetched from database with raw SQL")
 	return projects, nil
 }
 
 func (r *Repository) GetProjectByID(projectID uint) (*models.Project, error) {
-	var project models.Project
+	var projects []models.Project
 	err := r.DB.
-		Unscoped().                 // Ignore soft deletes, consistent with GetProjects
-		Where("id = ?", projectID). // Explicitly specify the ID condition
 		Preload("Creator").
-		Preload("Tasks").
+		Preload("Tasks", "deleted_at IS NULL").
+		Preload("Tasks.User").
+		Preload("Tasks.Project").
 		Preload("Users.User").
-		First(&project).Error
+		Where("id = ?", projectID).
+		Find(&projects).Error
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"projectID": projectID,
 			"error":     err,
-		}).Warn("Project not found in GetProjectByID")
+		}).Error("Error fetching project")
 		return nil, err
+	}
+	if len(projects) == 0 {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+		}).Warn("Project not found in GetProjectByID")
+		return nil, gorm.ErrRecordNotFound
 	}
 	logrus.WithFields(logrus.Fields{
 		"projectID": projectID,
+		"project":   projects[0],
 	}).Debug("Project retrieved in GetProjectByID")
-	return &project, nil
+	return &projects[0], nil
 }
 
 func (r *Repository) UpdateProject(project *models.Project) error {
@@ -125,7 +184,63 @@ func (r *Repository) UpdateProject(project *models.Project) error {
 }
 
 func (r *Repository) DeleteProject(projectID uint) error {
-	return r.DB.Delete(&models.Project{}, projectID).Error
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     tx.Error,
+		}).Error("Failed to start transaction")
+		return tx.Error
+	}
+
+	if err := tx.Where("project_id = ?", projectID).Delete(&models.UserRole{}).Error; err != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     err,
+		}).Error("Failed to delete user_roles entries")
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("project_id = ?", projectID).Delete(&models.Task{}).Error; err != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     err,
+		}).Error("Failed to delete tasks")
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Where("project_id = ?", projectID).Delete(&models.Activity{}).Error; err != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     err,
+		}).Error("Failed to delete activities")
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Unscoped().Delete(&models.Project{}, projectID).Error; err != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     err,
+		}).Error("Failed to delete project")
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		logrus.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"error":     err,
+		}).Error("Failed to commit transaction")
+		return err
+	}
+
+	logrus.WithFields(logrus.Fields{
+		"projectID": projectID,
+	}).Info("Project and related records deleted successfully")
+	return nil
 }
 
 func (r *Repository) AddUserToProject(userID, projectID uint, role string) error {
@@ -172,7 +287,7 @@ func (r *Repository) RemoveUserFromProject(userID, projectID uint) error {
 func (r *Repository) GetTasksByProjectID(projectID uint) ([]models.Task, error) {
 	var tasks []models.Task
 	err := r.DB.
-		Where("project_id = ?", projectID).
+		Where("project_id = ? AND deleted_at IS NULL", projectID).
 		Preload("User").
 		Preload("Project").
 		Find(&tasks).Error
@@ -189,6 +304,7 @@ func (r *Repository) GetTasksByProjectID(projectID uint) ([]models.Task, error) 
 	}).Debug("Tasks fetched for project")
 	return tasks, nil
 }
+
 func (r *Repository) LogActivity(projectID, userID uint, action string) error {
 	activity := models.Activity{
 		ProjectID: projectID,
@@ -220,7 +336,7 @@ func (r *Repository) GetActivitiesByProjectID(projectID uint) ([]models.Activity
 		Where("project_id = ?", projectID).
 		Preload("User").
 		Order("timestamp DESC").
-		Limit(10). // Limit to 10 recent activities
+		Limit(10).
 		Find(&activities).Error
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -234,4 +350,14 @@ func (r *Repository) GetActivitiesByProjectID(projectID uint) ([]models.Activity
 		"activityCount": len(activities),
 	}).Debug("Activities fetched for project")
 	return activities, nil
+}
+
+func (r *Repository) UpdateProjectOwner(projectID, newCreatorID uint) error {
+	return r.DB.Model(&models.Project{}).Where("id = ?", projectID).Update("creator_id", newCreatorID).Error
+}
+
+func (r *Repository) GetUsers() ([]models.User, error) {
+	var users []models.User
+	err := r.DB.Find(&users).Error
+	return users, err
 }

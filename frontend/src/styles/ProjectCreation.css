@@ -11,39 +11,49 @@
     align-items: center;
     z-index: 1000;
   }
-  .modal {
+
+  .modal-content {
     background-color: #252b3b;
     padding: 20px;
     border-radius: 8px;
     width: 400px;
+    max-width: 90%;
     color: #ffffff;
   }
+
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
   }
+
   .modal-header h2 {
     margin: 0;
     font-size: 18px;
   }
-  .close-btn {
+
+  .close-button {
     background: none;
     border: none;
     color: #9ca3af;
     cursor: pointer;
   }
+
   .form-group {
     margin-bottom: 15px;
   }
+
   .form-group label {
     display: block;
     color: #9ca3af;
     font-size: 14px;
     margin-bottom: 5px;
   }
-  .form-group input, .form-group select, .form-group textarea {
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #3a4256;
@@ -51,16 +61,61 @@
     background-color: #1f2533;
     color: #ffffff;
     font-family: 'Inter', sans-serif;
+    font-size: 14px;
   }
-  .submit-btn {
+
+  .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  .form-group select[multiple] {
+    height: 120px;
+  }
+
+  .submit-button {
     background-color: #9b87f6;
     color: #ffffff;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
+    font-family: 'Inter', sans-serif;
     width: 100%;
   }
-  .submit-btn:hover {
+
+  .submit-button:hover {
     background-color: #6654b6;
+  }
+
+  .cancel-button {
+    background-color: #3a4256;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .cancel-button:hover {
+    background-color: #2d3748;
+  }
+
+  .error-message {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: rgba(231, 76, 60, 0.1);
+    border-radius: 4px;
+  }
+
+  .modal-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
   }

@@ -22,7 +22,7 @@ function Projects() {
     setIsLoading(true);
     try {
       const response = await api.get('/projects', {
-        params: { _t: new Date().getTime() }, // Cache-busting parameter
+        params: { _t: new Date().getTime() },
       });
       console.log('Fetched projects:', response.data);
       const mappedProjects = response.data.map((project) => ({
@@ -30,10 +30,20 @@ function Projects() {
         title: project.name,
         description: project.description || 'No description provided',
         tasks: project.tasks ? project.tasks.length : 0,
-        category: project.category ? project.category.charAt(0).toUpperCase() + project.category.slice(1).toLowerCase() : 'Uncategorized',
-        status: project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1).toLowerCase() : 'Planned',
+        category: project.category
+          ? project.category.charAt(0).toUpperCase() + project.category.slice(1).toLowerCase()
+          : 'Uncategorized',
+        status: project.status
+          ? project.status.charAt(0).toUpperCase() + project.status.slice(1).toLowerCase()
+          : 'Planned',
         isFavorite: project.is_favorite || false,
         creator: project.creator ? project.creator.name : 'Unknown',
+        teamMembers: project.users
+          ? project.users.map((userRole) => ({
+              name: userRole.user ? userRole.user.name || 'Unknown' : 'Unknown',
+              role: userRole.role || 'No role',
+            }))
+          : [],
       }));
       console.log('Mapped projects:', mappedProjects);
       setProjectsState(mappedProjects);
@@ -41,10 +51,6 @@ function Projects() {
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch projects. Please try again.');
       console.error('Error fetching projects:', err);
-      // If the error is a 401, the interceptor should have redirected to login
-      if (err.response?.status === 401) {
-        console.log('401 error after retry - redirecting to login');
-      }
     } finally {
       setIsLoading(false);
     }
@@ -60,9 +66,6 @@ function Projects() {
     const statusMatch = activeStatus === 'All' || project.status === activeStatus;
     return categoryMatch && statusMatch;
   });
-
-  console.log('Active filters:', { activeTab, activeCategory, activeStatus });
-  console.log('Filtered projects:', filteredProjects);
 
   const toggleFavorite = async (projectId) => {
     try {
@@ -86,14 +89,7 @@ function Projects() {
 
   const handleAddProject = async (newProject) => {
     try {
-      console.log('Creating new project:', newProject);
-      const response = await api.post('/projects', {
-        name: newProject.title,
-        description: newProject.description,
-        category: newProject.category,
-        status: newProject.status,
-      });
-      console.log('Project creation response:', response.data);
+      console.log('Adding new project to state:', newProject);
       setShowProjectCreation(false);
       setActiveTab('All Projects');
       setActiveCategory('All');
@@ -101,8 +97,8 @@ function Projects() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setRefreshProjects((prev) => !prev);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create project. Please try again.');
-      console.error('Error creating project:', err);
+      setError(err.response?.data?.error || 'Failed to add project. Please try again.');
+      console.error('Error adding project:', err);
     }
   };
 
@@ -211,41 +207,47 @@ function Projects() {
                 {filteredProjects.length === 0 ? (
                   <p className="no-projects-message">No projects found.</p>
                 ) : (
-                  <>
-                    {console.log('Rendering projects:', filteredProjects)}
-                    {filteredProjects.map((project) => (
-                      <div key={project.id} className="project-card">
-                        <div className="card-header">
-                          <h3>{project.title}</h3>
-                          <span className="project-tag">{project.category}</span>
-                          <Star
-                            size={16}
-                            className={project.isFavorite ? 'favorite-star' : 'unfavorite-star'}
-                            onClick={() => toggleFavorite(project.id)}
-                          />
-                        </div>
-                        <p className="project-description">{project.description}</p>
-                        <div className="card-stats">
-                          <span className="task-count">∥ {project.tasks} tasks</span>
-                          <span className="project-status">
-                            {project.status === 'In Progress' && (
-                              <AlertCircle size={16} className="status-icon in-progress" />
-                            )}
-                            {project.status === 'Planned' && (
-                              <Clock size={16} className="status-icon planned" />
-                            )}
-                            {project.status === 'Completed' && (
-                              <CheckCircle size={16} className="status-icon completed" />
-                            )}
-                            {project.status}
-                          </span>
-                        </div>
-                        <Link to={`/project/${project.id}`} className="view-details-btn">
-                          View Details →
-                        </Link>
+                  filteredProjects.map((project) => (
+                    <div className="project-card" key={project.id}>
+                      <div className="card-header">
+                        <h3>{project.title}</h3>
+                        <span className="project-tag">{project.category}</span>
+                        <Star
+                          size={16}
+                          className={project.isFavorite ? 'favorite-star' : 'unfavorite-star'}
+                          onClick={() => toggleFavorite(project.id)}
+                        />
                       </div>
-                    ))}
-                  </>
+                      <p className="project-description">{project.description}</p>
+                      <div className="card-stats">
+                        <span className="task-count">∥ {project.tasks} tasks</span>
+                        <span className="project-status">
+                          {project.status === 'In Progress' && (
+                            <AlertCircle size={16} className="status-icon in-progress" />
+                          )}
+                          {project.status === 'Planned' && (
+                            <Clock size={16} className="status-icon planned" />
+                          )}
+                          {project.status === 'Completed' && (
+                            <CheckCircle size={16} className="status-icon completed" />
+                          )}
+                          {project.status}
+                        </span>
+                      </div>
+                      <div className="project-members">
+                        <p><strong>Owner:</strong> {project.creator}</p>
+                        <p>
+                          <strong>Team:</strong>{' '}
+                          {project.teamMembers.length > 0
+                            ? project.teamMembers.map((member) => `${member.name} (${member.role})`).join(', ')
+                            : 'None'}
+                        </p>
+                      </div>
+                      <Link to={`/project/${project.id}`} className="view-details-btn">
+                        View Details →
+                      </Link>
+                    </div>
+                  ))
                 )}
               </div>
             </>

@@ -76,6 +76,7 @@ func (h *Handler) CreateTask(c *gin.Context) {
 		return
 	}
 
+	// Integration: Check user permissions before creating a task
 	if !CheckProjectPermission(c, h, userID, input.ProjectID) {
 		return
 	}
@@ -95,6 +96,7 @@ func (h *Handler) CreateTask(c *gin.Context) {
 	}).Info("Task created successfully")
 	c.JSON(http.StatusCreated, task)
 }
+
 func (h *Handler) UpdateTask(c *gin.Context) {
 	userID := c.GetUint("userID")
 	logrus.WithFields(logrus.Fields{
@@ -123,6 +125,7 @@ func (h *Handler) UpdateTask(c *gin.Context) {
 		return
 	}
 
+	// Integration: Check user permissions before updating a task
 	if !CheckProjectPermission(c, h, userID, input.ProjectID) {
 		return
 	}
@@ -170,6 +173,7 @@ func (h *Handler) DeleteTask(c *gin.Context) {
 		return
 	}
 
+	// Integration: Check user permissions before deleting a task
 	canModify, err := h.Service.CanModifyProject(userID, task.ProjectID)
 	if err != nil || !canModify {
 		logrus.WithFields(logrus.Fields{

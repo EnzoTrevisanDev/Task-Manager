@@ -39,3 +39,19 @@ func (h *Handler) CreateUser(c *gin.Context) {
 	}).Info("User created successfully")
 	c.JSON(http.StatusCreated, user)
 }
+
+func (h *Handler) GetUsers(c *gin.Context) {
+	logrus.WithFields(logrus.Fields{
+		"method": "GET",
+		"path":   "/users",
+	}).Info("Incoming request")
+	users, err := h.Service.GetUsers()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("Failed to get users")
+		SendError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, users)
+}

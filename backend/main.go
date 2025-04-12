@@ -87,6 +87,8 @@ func main() {
 	protected.PUT("/projects/:project_id/users/:user_id", handler.UpdateUserRole)
 	protected.DELETE("/projects/:project_id/users/:user_id", handler.RemoveUserFromProject)
 	protected.PUT("/projects/:project_id/owner", handler.ChangeProjectOwner)
+	// User routes
+	protected.GET("/users", handler.GetUsers)
 
 	// Create an HTTP server with the Gin router
 	port := os.Getenv("PORT")

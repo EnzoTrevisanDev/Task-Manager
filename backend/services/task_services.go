@@ -14,8 +14,8 @@ func (s *Service) CreateTask(title, description string, projectID, userID uint, 
 		Description: description,
 		ProjectID:   projectID,
 		UserID:      userID,
-		Status:      status,  // Set status
-		DueDate:     dueDate, // Set due date
+		Status:      status,
+		DueDate:     dueDate,
 	}
 	if err := s.Repo.CreateTask(task); err != nil {
 		logrus.WithFields(logrus.Fields{
@@ -30,6 +30,8 @@ func (s *Service) CreateTask(title, description string, projectID, userID uint, 
 		"projectID": projectID,
 		"userID":    userID,
 	}).Info("Task created successfully")
+	// Enhancement: Emit a WebSocket event for real-time updates
+	// s.notifyClients("task_created", task)
 	return task, nil
 }
 
@@ -73,8 +75,8 @@ func (s *Service) UpdateTask(taskID uint, title, description string, projectID, 
 	task.Description = description
 	task.ProjectID = projectID
 	task.UserID = userID
-	task.Status = status   // Update status
-	task.DueDate = dueDate // Update due date
+	task.Status = status
+	task.DueDate = dueDate
 	if err := s.Repo.UpdateTask(task); err != nil {
 		logrus.WithFields(logrus.Fields{
 			"taskID": taskID,
@@ -85,6 +87,8 @@ func (s *Service) UpdateTask(taskID uint, title, description string, projectID, 
 	logrus.WithFields(logrus.Fields{
 		"taskID": taskID,
 	}).Info("Task updated successfully")
+	// Enhancement: Emit a WebSocket event for real-time updates
+	// s.notifyClients("task_updated", task)
 	return task, nil
 }
 
@@ -99,6 +103,8 @@ func (s *Service) DeleteTask(taskID uint) error {
 	logrus.WithFields(logrus.Fields{
 		"taskID": taskID,
 	}).Info("Task deleted successfully")
+	// Enhancement: Emit a WebSocket event for real-time updates
+	// s.notifyClients("task_deleted", taskID)
 	return nil
 }
 
@@ -133,3 +139,8 @@ func (s *Service) GetTasksByProjectID(projectID uint) ([]models.Task, error) {
 	}).Info("Tasks retrieved for project successfully")
 	return tasks, nil
 }
+
+// Enhancement: Add a method to fetch task dependencies (future feature)
+// func (s *Service) GetTaskDependencies(taskID uint) ([]models.Task, error) {
+//     // Implementation for fetching dependent tasks
+// }
